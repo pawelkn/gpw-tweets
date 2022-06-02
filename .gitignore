@@ -1,0 +1,8 @@
+build
+idea
+mstall
+node_modules
+smtp-config.json
+mailing-list.json
+package-lock.json
+deploy.sh

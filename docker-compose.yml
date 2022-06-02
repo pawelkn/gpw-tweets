@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  volume-notifier:
+    build: .
+    command: npm start
+    volumes:
+      - ./data:/app/data
