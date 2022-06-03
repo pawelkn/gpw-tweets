@@ -6,3 +6,5 @@ services:
     command: npm start
     volumes:
       - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
+      - ${PWD}/mstall:/app/mstall
+      - ${PWD}/images:/app/images

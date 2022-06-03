@@ -1,6 +1,7 @@
 build
 idea
 mstall
+images
 node_modules
 
 twitter-credentials.json
