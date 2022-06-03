@@ -1,6 +1,6 @@
 {
   "name": "volume-notifier",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Volume Notifier sends email with list of stocks, which volume increased significantly since last trading day",
   "prepare": "npm run build",
   "main": "build/volume-notifier.js",

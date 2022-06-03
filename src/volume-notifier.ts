@@ -80,7 +80,7 @@ async function sendMail() {
 function getHtmlMessage() {
     let html = `Parameters:
         <ul>
-            <li>volume rise: ${volumeRise}</li>
+            <li>volume rise: x${volumeRise}</li>
             <li>min turnover: ${minTurnover}</li>
             <li>min price: ${minPrice}</li>
         </ul>
