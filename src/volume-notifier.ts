@@ -27,11 +27,19 @@ wseQuotes.update()
         .then(() => sendMail()))
 
 async function getTriggered() {
+    const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
+    const today = `${new Date().getFullYear()}${zeroPad(new Date().getMonth() + 1)}${zeroPad(new Date().getDate())}`
+
     for (const stock of polishStocks) {
         try {
             const hist = await wseQuotes.getHistoricalPrices(stock.name)
             if (hist.length > 2) {
                 const last = hist[hist.length - 1]
+                if (today !== last.date) {
+                    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: last.date, current: today })
+                    continue
+                }
+
                 const lastAvg = (last.open + last.high + last.low + last.close) / 4
                 const lastTurnover = lastAvg * last.volume
 
