@@ -56,7 +56,7 @@ async function getTriggered() {
                 }
             }
         } catch (e) {
-            console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e })
+            console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e.message })
         }
     }
 
