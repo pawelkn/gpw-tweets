@@ -5,7 +5,7 @@ import * as path from 'path'
 
 const etl = require('etl')
 
-export type Prices = { date: Date | string, open: number, high: number, low: number, close: number, volume: number }
+export type Candlestick = { date: string, open: number, high: number, low: number, close: number, volume: number }
 
 export default class WSEQuotes {
     private path: string
@@ -27,23 +27,22 @@ export default class WSEQuotes {
         })
     }
 
-    public getHistoricalPrices(ticker: string, parseDates: boolean = false) {
-        return new Promise<Prices[]>((resolve, reject) => {
+    public getHistorical(ticker: string, parseDates: boolean = false) {
+        return new Promise<Candlestick[]>((resolve, reject) => {
             const filename = path.join(this.path, ticker + '.mst')
             fs.access(filename, fs.constants.F_OK, (err) => {
                 if (err)
                     return reject(new Error(`Data file ${filename} does not exist`))
 
-                let prices: Prices[] = []
+                let prices: Candlestick[] = []
                 fs.createReadStream(filename)
                     .pipe(etl.csv())
                     .pipe(etl.map((data: any) => {
-                        const parseDate = (dt: string) => new Date(dt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
                         prices.push({
-                            date: parseDates ? parseDate(data['<DTYYYYMMDD>']) : data['<DTYYYYMMDD>'],
+                            date: data['<DTYYYYMMDD>'],
                             open: parseFloat(data['<OPEN>']),
                             high: parseFloat(data['<HIGH>']),
-                            low: parseFloat(data['<HIGH>']),
+                            low: parseFloat(data['<LOW>']),
                             close: parseFloat(data['<CLOSE>']),
                             volume: parseFloat(data['<VOL>'])
                         })

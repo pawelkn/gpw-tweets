@@ -5,4 +5,4 @@ services:
     build: .
     command: npm start
     volumes:
-      - ./data:/app/data
+      - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
