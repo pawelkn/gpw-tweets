@@ -276,14 +276,27 @@ export default function stockChart(description: string, stock_data: Candlestick[
         context.lineWidth = 1
         context.strokeStyle = highlight ? (upcandle ? "lime" : "red") : "#000"
         context.fillStyle = upcandle ? "white" : "#08c"
+        context.fillRect(left, top, width, height)
+
         context.beginPath()
         context.moveTo(left, top)
         context.lineTo(left + width, top)
-        context.lineTo(left + width, top + height)
-        context.lineTo(left, top + height)
-        context.lineTo(left, top)
         context.stroke()
-        context.fill()
+
+        context.beginPath()
+        context.moveTo(left + width, top)
+        context.lineTo(left + width, top + height)
+        context.stroke()
+
+        context.beginPath()
+        context.moveTo(left, top + height)
+        context.lineTo(left + width, top + height)
+        context.stroke()
+
+        context.beginPath()
+        context.moveTo(left, top)
+        context.lineTo(left, top + height)
+        context.stroke()
 
         context.beginPath()
         context.moveTo(center, maximum)
