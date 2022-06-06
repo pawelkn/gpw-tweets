@@ -3,7 +3,43 @@ import { max, min, log10, round, isNaN } from 'mathjs'
 import { createCanvas } from "canvas"
 import { Candlestick } from './wse-quotes'
 
-export default function stockChart(description: string, stock_data: Candlestick[], currency: string = 'PLN', period: string = '3m',interval:string = '1 day') {
+const IMAGE = {
+    width: 600,
+    height: 430
+}
+
+const HEADER = {
+    top: 0,
+    left: 0,
+    width: IMAGE.width,
+    height: 60,
+    padding: 14,
+    line: 42
+}
+
+const CHART = {
+    top: HEADER.height,
+    left: 0,
+    width: IMAGE.width,
+    height: 330,
+    padding: {
+        top: HEADER.height + 22.0,
+        bottom: HEADER.height + 308.0,
+        left: 13.5,
+        right: IMAGE.width - 60.5
+    }
+}
+
+const FOOTER = {
+    top: HEADER.height + CHART.height,
+    left: 0,
+    width: IMAGE.width,
+    height: IMAGE.height - HEADER.height - CHART.height,
+    padding: 16.5,
+    line: 24
+}
+
+export default function stockChart(description: string, stock_data: Candlestick[], currency: string = 'PLN', period: string = '3m', interval: string = '1 day') {
     if (stock_data.length < 2)
         return null
 
@@ -15,76 +51,53 @@ export default function stockChart(description: string, stock_data: Candlestick[
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
     const last_update = `${date.getFullYear()}-${zeroPad(date.getMonth() + 1)}-${zeroPad(date.getDate())}`
 
-    const width = 560
-    const height = 400
-
-    const IMAGE = {
-        left: 0,
-        top: 56,
-        width: 560,
-        height: 310
-    }
-
-    const BORDER = {
-        top: IMAGE.top + 20.0,
-        bottom: IMAGE.top + IMAGE.height - 20.0,
-        left: IMAGE.left + 12.5,
-        right: IMAGE.width - 60.5
-    }
-
-    const CHARACTER_WIDTH = 8
-
-    const canvas = createCanvas(width, height)
+    const canvas = createCanvas(IMAGE.width, IMAGE.height)
     const context = canvas.getContext("2d")
 
-    // full rect
+    // background
     context.fillStyle = "#fafafa"
-    context.fillRect(0, 0, width, height)
+    context.fillRect(0, 0, IMAGE.width, IMAGE.height)
 
-    // inner rect
-    context.fillStyle = "#fff"
-    context.fillRect(IMAGE.left, IMAGE.top, IMAGE.width, IMAGE.height)
-
-    // header line
+    // header
     context.lineWidth = 1
     context.strokeStyle = '#eaeaea'
     context.beginPath()
-    context.moveTo(IMAGE.left, IMAGE.top)
-    context.lineTo(IMAGE.width, IMAGE.top)
+    context.moveTo(CHART.left, CHART.top)
+    context.lineTo(CHART.width, CHART.top)
     context.stroke()
 
-    // footer line
-    context.lineWidth = 1
-    context.strokeStyle = '#eaeaea'
-    context.beginPath()
-    context.moveTo(IMAGE.left, IMAGE.top + IMAGE.height)
-    context.lineTo(IMAGE.width, IMAGE.top + IMAGE.height)
-    context.stroke()
-
-    // header content
     context.fillStyle = "#08c"
     context.font = 'bold 28px DejaVu'
     context.textAlign = "left"
-    context.fillText(description, 14, 40)
-
+    context.fillText(description, HEADER.left + HEADER.padding, HEADER.top + HEADER.line)
     context.fillStyle = (price_change !== 0 ? (price_change > 0 ? "green" : "red") : "grey")
     context.font = '28px DejaVu'
     context.textAlign = "center"
-    context.fillText(`${price_change.toFixed(2)}% ${price_change != 0 ? (price_change > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, width / 2, 40)
-
+    context.fillText(`${price_change.toFixed(2)}% ${price_change != 0 ? (price_change > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, HEADER.left + HEADER.width/2, HEADER.top + HEADER.line)
     context.fillStyle = "#333"
     context.textAlign = "right"
-    context.fillText(`${current_price.toFixed(2)} ${currency}`, width - 14, 40)
+    context.fillText(`${current_price.toFixed(2)} ${currency}`, HEADER.left + HEADER.width - HEADER.padding, HEADER.top + HEADER.line)
 
-    // footer content
+    // footer
+    context.lineWidth = 1
+    context.strokeStyle = '#eaeaea'
+    context.beginPath()
+    context.moveTo(CHART.left, CHART.top + CHART.height)
+    context.lineTo(CHART.width, CHART.top + CHART.height)
+    context.stroke()
+
     context.fillStyle = "#333"
     context.font = '12px DejaVu'
     context.textAlign = "left"
-    context.fillText(`Interval: ${interval}`, 16.5, height - 12)
+    context.fillText(`Interval: ${interval}`, FOOTER.left + FOOTER.padding, FOOTER.top + FOOTER.line)
     context.textAlign = "center"
-    context.fillText("\u00A9 stockaggregator.com", width/2, height - 12 )
+    context.fillText("\u00A9 stockaggregator.com", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
     context.textAlign = "right"
-    context.fillText(last_update, width - 16.5, height - 12)
+    context.fillText(last_update, FOOTER.left + FOOTER.width - FOOTER.padding, FOOTER.top + FOOTER.line)
+
+    // chart
+    context.fillStyle = "#fff"
+    context.fillRect(CHART.left, CHART.top, CHART.width, CHART.height)
 
     let highest = NaN
     let lowest = NaN
@@ -111,8 +124,8 @@ export default function stockChart(description: string, stock_data: Candlestick[
     let x1 = highest
     let x2 = lowest
 
-    let y1 = BORDER.top
-    let y2 = BORDER.bottom
+    let y1 = CHART.padding.top
+    let y2 = CHART.padding.bottom
 
     let a1 = (y1 - y2) / (log10(x1) - log10(x2))
     let b1 = y1 - a1 * (log10(x1))
@@ -129,14 +142,14 @@ export default function stockChart(description: string, stock_data: Candlestick[
     let linScale = (x: number) => round(a2 * x + b2) + 0.5
 
     // vertical grid
-    const vertical_space = (BORDER.right - BORDER.left) / (stock_data.length)
+    const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
 
     const descriptionText = function (x1: number, x2: number, text: string) {
-        if (x2 - x1 > String(text).length * CHARACTER_WIDTH) {
+        if (x2 - x1 > String(text).length * 8) {
             context.fillStyle = "#333"
             context.font = '12px DejaVu'
             context.textAlign = "center"
-            context.fillText(text, x2 - (x2 - x1) / 2, BORDER.bottom + 14.0)
+            context.fillText(text, x2 - (x2 - x1) / 2, CHART.padding.bottom + 14.0)
         }
     }
 
@@ -153,7 +166,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     }
 
     x1 = NaN
-    x2 = BORDER.left
+    x2 = CHART.padding.left
 
     let grid: string = 'day'
     if ((period == '3m') || (period == '5m') || (period == '12m')) grid = 'month'
@@ -174,13 +187,13 @@ export default function stockChart(description: string, stock_data: Candlestick[
                 ((grid == 'year') && (last_date.getFullYear() != date.getFullYear())) ||
                 ((grid == 'decade') && (last_date.getFullYear() != date.getFullYear()) && (date.getFullYear() % 10 == 0))) {
                 x1 = x2
-                x2 = round(BORDER.left + vertical_space * i) + 0.5
+                x2 = round(CHART.padding.left + vertical_space * i) + 0.5
 
                 context.lineWidth = 1
                 context.strokeStyle = '#ddd'
                 context.beginPath()
-                context.moveTo(x2, BORDER.top - 10.0)
-                context.lineTo(x2, BORDER.bottom + 10.0)
+                context.moveTo(x2, CHART.padding.top - 10.0)
+                context.lineTo(x2, CHART.padding.bottom + 10.0)
                 context.stroke()
 
                 descriptionText(x1, x2, dateFormat(last_date, grid))
@@ -190,7 +203,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
             else if (stock_data.length == i + 1) {
                 x1 = x2
-                x2 = round(BORDER.left + vertical_space * stock_data.length) + 0.5
+                x2 = round(CHART.padding.left + vertical_space * stock_data.length) + 0.5
 
                 descriptionText(x1, x2, dateFormat(date, grid))
             }
@@ -199,33 +212,33 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
     // horizontal grid
     const horizontal_count = 5
-    const horizontal_space = (BORDER.bottom - BORDER.top) / (horizontal_count - 1)
+    const horizontal_space = (CHART.padding.bottom - CHART.padding.top) / (horizontal_count - 1)
 
     for (let i = 0; i < horizontal_count; i++) {
-        let y = round(BORDER.top + horizontal_space * i) + 0.5
+        let y = round(CHART.padding.top + horizontal_space * i) + 0.5
         const text = reverseLogScale(y) ? Number(reverseLogScale(y)).toFixed(reverseLogScale(y) < 1000 ? 2 : 0) : ""
 
         context.lineWidth = 1
         context.strokeStyle = '#ddd'
         context.beginPath()
-        context.moveTo(BORDER.left, y)
-        context.lineTo(BORDER.right + 5, y)
+        context.moveTo(CHART.padding.left, y)
+        context.lineTo(CHART.padding.right + 5, y)
         context.stroke()
 
         context.fillStyle = "#333"
         context.font = '12px DejaVu'
         context.textAlign = "left"
-        context.fillText(text, BORDER.right + 10.0, y + 4.0)
+        context.fillText(text, CHART.padding.right + 10.0, y + 4.0)
     }
 
     // volume bars
 
     for (let i = 0; i < stock_data.length; i++) {
         const e = stock_data[i]
-        const vertical_space = (BORDER.right - BORDER.left) / (stock_data.length)
+        const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
         let stroke_width = vertical_space > 7.0 ? 1.0 : 0.0
 
-        let center = round(BORDER.left + vertical_space * (i + 0.5)) + 0.5
+        let center = round(CHART.padding.left + vertical_space * (i + 0.5)) + 0.5
         let width = 2.0 + stroke_width
         let left = center - width / 2
 
@@ -244,9 +257,9 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
     for (let i = 0; i < stock_data.length; i++) {
         const e = stock_data[i]
-        const vertical_space = (BORDER.right - BORDER.left) / (stock_data.length)
+        const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
 
-        let center = round(BORDER.left + vertical_space * (i + 0.5)) + 0.5
+        let center = round(CHART.padding.left + vertical_space * (i + 0.5)) + 0.5
         let width = vertical_space > 7.0 ? 4.0 : 2.0
         let left = center - width / 2
         let right = left + width
