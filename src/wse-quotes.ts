@@ -27,9 +27,9 @@ export default class WSEQuotes {
         })
     }
 
-    public getHistorical(ticker: string, parseDates: boolean = false) {
+    public getHistorical(name: string) {
         return new Promise<Candlestick[]>((resolve, reject) => {
-            const filename = path.join(this.path, ticker + '.mst')
+            const filename = path.join(this.path, name + '.mst')
             fs.access(filename, fs.constants.F_OK, (err) => {
                 if (err)
                     return reject(new Error(`Data file ${filename} does not exist`))
