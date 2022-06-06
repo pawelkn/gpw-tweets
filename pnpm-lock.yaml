@@ -6,6 +6,7 @@ specifiers:
   canvas: ^2.9.1
   etl: ^0.7.0
   mathjs: ^10.6.1
+  talib: ^1.1.4
   twitter-api-v2: ^1.12.2
   typescript: ^3.9.10
   unzipper: ^0.10.11
@@ -14,6 +15,7 @@ dependencies:
   canvas: 2.9.1
   etl: 0.7.0
   mathjs: 10.6.1
+  talib: 1.1.4
   twitter-api-v2: 1.12.2
   unzipper: 0.10.11
 
@@ -629,6 +631,15 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       ansi-regex: 5.0.1
+    dev: false
+
+  /talib/1.1.4:
+    resolution: {integrity: sha512-b5Q7w4Hn5VG7mok2sf77MirBLJlEI0pYjvrhrdf7e9M4iK2/q8fElIr4bQnOlCIr5QVZhE3KsZuAPvx5Bc334Q==}
+    engines: {node: '>=8.16.0'}
+    os: [darwin, linux, freebsd, win32]
+    requiresBuild: true
+    dependencies:
+      nan: 2.16.0
     dev: false
 
   /tar/6.1.11:

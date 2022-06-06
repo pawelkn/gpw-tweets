@@ -1,7 +1,8 @@
-import * as fs from 'fs'
-import { abs, max, min } from 'mathjs'
+const fs = require('fs')
+const talib = require('talib')
+
 import TwitterApi from 'twitter-api-v2'
-import WSEQuotes, { Candlestick } from './wse-quotes'
+import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
 
 const twitterCredentialsFile = process.env.VOLUME_NOTIFIER_TWITTER_CREDENTIALS_FILE || 'twitter-credentials.json'
@@ -15,14 +16,8 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { hammer: string[], shootingStar: string[], doji: string[], white: string[], black: string[] }
-let triggered: Triggered = { hammer: [], shootingStar: [], doji: [], white: [], black: [] }
-
-const isHammer = (c: Candlestick) => (max(c.close, c.open) === c.high) && (abs(c.close - c.open) * 2 < (c.high - c.low))
-const isShootingStar = (c: Candlestick) => (min(c.close, c.open) === c.low) && (abs(c.close - c.open) * 2 < (c.high - c.low))
-const isDoji = (c: Candlestick) => (c.close === c.open) && (c.high > c.open) && (c.low < c.open)
-const isWhite = (c : Candlestick) => (c.close > c.open)
-const isBlack = (c : Candlestick) => (c.close < c.open)
+type Triggered = { bullish: { engulfing: string[], belthold: string[] }, bearish: { engulfing: string[], belthold: string[] }}
+let triggered: Triggered = { bullish: { engulfing: [], belthold: [] }, bearish: {engulfing: [], belthold: [] }}
 
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const rwTwitterApi = twitterApi.readWrite
@@ -30,7 +25,23 @@ const rwTwitterApi = twitterApi.readWrite
 const wseQuotes = new WSEQuotes()
 wseQuotes.update()
     .then(() => getTriggered()
-        .then(() => send()))
+        .then(() => tweetAll()))
+
+async function candlestick(name: string, open: number[], high: number[], low: number[], close: number[] ) {
+    return await new Promise<number>((resolve, reject) => {
+        talib.execute({
+            name: name,
+            startIdx: close.length - 1,
+            endIdx: close.length - 1,
+            open: open,
+            high: high,
+            low: low,
+            close: close
+        }, (err: any, result: any) => {
+            err !== null ? reject(err) : resolve(result.result.outInteger[0])
+        })
+    })
+}
 
 async function getTriggered() {
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
@@ -41,10 +52,10 @@ async function getTriggered() {
             const hist = await wseQuotes.getHistorical(stock.name)
             if (hist.length > 2) {
                 const last = hist[hist.length - 1]
-                if (today !== last.date) {
-                    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: last.date, current: today })
-                    continue
-                }
+                //if (today !== last.date) {
+                //    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: last.date, current: today })
+                //    continue
+                //}
 
                 const lastAvg = (last.open + last.high + last.low + last.close) / 4
                 const lastTurnover = lastAvg * last.volume
@@ -53,11 +64,18 @@ async function getTriggered() {
                     (lastTurnover > minTurnover) &&
                     (last.close > minPrice)
                 ) {
-                    if (isHammer(last)) triggered.hammer.push(stock.name)
-                    else if (isShootingStar(last)) triggered.shootingStar.push(stock.name)
-                    else if (isDoji(last)) triggered.doji.push(stock.name)
-                    else if (isWhite(last)) triggered.white.push(stock.name)
-                    else if (isBlack(last)) triggered.black.push(stock.name)
+                    const open = hist.map(d => d.open)
+                    const high = hist.map(d => d.high)
+                    const low = hist.map(d => d.low)
+                    const close = hist.map(d => d.close)
+
+                    const engulfing = await candlestick("CDLENGULFING", open, high, low, close)
+                    const belthold = await candlestick("CDLBELTHOLD", open, high, low, close)
+
+                    if (engulfing > 0) triggered.bullish.engulfing.push(stock.name)
+                    if (belthold > 0) triggered.bullish.belthold.push(stock.name)
+                    if (engulfing < 0) triggered.bearish.engulfing.push(stock.name)
+                    if (belthold < 0) triggered.bearish.belthold.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -70,24 +88,24 @@ async function getTriggered() {
     }
 }
 
-async function send() {
-    if (triggered.hammer.length !== 0) tweet(triggered.hammer, 'młot')
-    if (triggered.shootingStar.length !== 0) tweet(triggered.shootingStar, 'spadająca gwiazda')
-    if (triggered.doji.length !== 0) tweet(triggered.doji, 'doji')
-    if (triggered.white.length !== 0) tweet(triggered.white, 'biała świeca')
-    if (triggered.black.length !== 0) tweet(triggered.black, 'czarna świeca')
+async function tweetAll() {
+    tweet(triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
+    tweet(triggered.bullish.belthold, 'BULLISH BELT HOLD 📈')
+    tweet(triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
+    tweet(triggered.bearish.belthold, 'BEARISH BELT HOLD 📉')
 }
 
-async function tweet(stockNames: string[], candlesickDescription: string) {
-    const message = `Alert wolumenowy - ${candlesickDescription}\n` +
-        '\n' +
-        `${stockNames.join(" ")}\n` +
-        '\n' +
+async function tweet(stockNames: string[], description: string) {
+    if (stockNames.length === 0)
+        return
+
+    const message = `Alert wolumenowy #GPW - ${description}\n\n` +
+        `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
         `https://stockaggregator.com?tickers=${stockNames.join("%20")}`
 
     console.log('Tweet', { message: message })
 
-    const shuffledStockNames = stockNames.sort(() => 0.5 - Math.random());
-    const mediaIds = await Promise.all(shuffledStockNames.slice(0, 4).map(stockName => rwTwitterApi.v1.uploadMedia(`./images/${stockName}.png`)))
+    const firstFourStockNames = stockNames.slice(0, 4)
+    const mediaIds = await Promise.all(firstFourStockNames.map(stockName => rwTwitterApi.v1.uploadMedia(`./images/${stockName}.png`)))
     rwTwitterApi.v2.tweet(message, { media: { media_ids: mediaIds } })
 }
