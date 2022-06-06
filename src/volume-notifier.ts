@@ -2,6 +2,7 @@ const fs = require('fs')
 const talib = require('talib')
 
 import TwitterApi from 'twitter-api-v2'
+import { CronJob } from 'cron'
 import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
 
@@ -17,15 +18,15 @@ type TwitterCredentials = { appKey: string, appSecret: string, accessToken: stri
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
 type Triggered = { bullish: { engulfing: string[], belthold: string[] }, bearish: { engulfing: string[], belthold: string[] }}
-let triggered: Triggered = { bullish: { engulfing: [], belthold: [] }, bearish: {engulfing: [], belthold: [] }}
 
-const twitterApi = new TwitterApi({ ...twitterCredentials })
-const rwTwitterApi = twitterApi.readWrite
+new CronJob('0 50 19 * * 1-5', volumeNotifier, null, false, 'Europe/Warsaw').start()
 
-const wseQuotes = new WSEQuotes()
-wseQuotes.update()
-    .then(() => getTriggered()
-        .then(() => tweetAll()))
+function volumeNotifier() {
+    const wseQuotes = new WSEQuotes()
+    wseQuotes.update()
+        .then(() => getTriggered(wseQuotes)
+            .then((triggered) => tweetAll(triggered)))
+}
 
 async function candlestick(name: string, open: number[], high: number[], low: number[], close: number[] ) {
     return await new Promise<number>((resolve, reject) => {
@@ -43,7 +44,9 @@ async function candlestick(name: string, open: number[], high: number[], low: nu
     })
 }
 
-async function getTriggered() {
+async function getTriggered(wseQuotes: WSEQuotes) {
+    let triggered: Triggered = { bullish: { engulfing: [], belthold: [] }, bearish: {engulfing: [], belthold: [] }}
+
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
     const today = `${new Date().getFullYear()}${zeroPad(new Date().getMonth() + 1)}${zeroPad(new Date().getDate())}`
 
@@ -86,16 +89,20 @@ async function getTriggered() {
             console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e.message })
         }
     }
+
+    return triggered
 }
 
-async function tweetAll() {
-    tweet(triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
-    tweet(triggered.bullish.belthold, 'BULLISH BELT HOLD 📈')
-    tweet(triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
-    tweet(triggered.bearish.belthold, 'BEARISH BELT HOLD 📉')
+async function tweetAll(triggered: Triggered) {
+    const twitterApi = new TwitterApi({ ...twitterCredentials })
+
+    tweet(twitterApi, triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
+    tweet(twitterApi, triggered.bullish.belthold, 'BULLISH BELT HOLD 📈')
+    tweet(twitterApi, triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
+    tweet(twitterApi, triggered.bearish.belthold, 'BEARISH BELT HOLD 📉')
 }
 
-async function tweet(stockNames: string[], description: string) {
+async function tweet(twitterApi: TwitterApi, stockNames: string[], description: string) {
     if (stockNames.length === 0)
         return
 
@@ -105,7 +112,8 @@ async function tweet(stockNames: string[], description: string) {
 
     console.log('Tweet', { message: message })
 
+    const twitterApiRW = twitterApi.readWrite
     const firstFourStockNames = stockNames.slice(0, 4)
-    const mediaIds = await Promise.all(firstFourStockNames.map(stockName => rwTwitterApi.v1.uploadMedia(`./images/${stockName}.png`)))
-    rwTwitterApi.v2.tweet(message, { media: { media_ids: mediaIds } })
+    const mediaIds = await Promise.all(firstFourStockNames.map(stockName => twitterApiRW.v1.uploadMedia(`./images/${stockName}.png`)))
+    twitterApiRW.v2.tweet(message, { media: { media_ids: mediaIds } })
 }

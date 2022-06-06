@@ -3,7 +3,7 @@ version: '2'
 services:
   volume-notifier:
     build: .
-    command: npm start
+    command: node build/volume-notifier.js --now --no-send --no-date-check
     volumes:
       - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
       - ${PWD}/mstall:/app/mstall
