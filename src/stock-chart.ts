@@ -67,11 +67,11 @@ export default function stockChart(description: string, stock_data: Candlestick[
     context.stroke()
 
     context.fillStyle = "#08c"
-    context.font = 'bold 28px DejaVu'
+    context.font = 'bold 28px "DejaVu Sans"'
     context.textAlign = "left"
     context.fillText(description, HEADER.left + HEADER.padding, HEADER.top + HEADER.line)
     context.fillStyle = (price_change !== 0 ? (price_change > 0 ? "green" : "red") : "grey")
-    context.font = '28px DejaVu'
+    context.font = '28px "DejaVu Sans"'
     context.textAlign = "center"
     context.fillText(`${price_change.toFixed(2)}% ${price_change != 0 ? (price_change > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, HEADER.left + HEADER.width/2, HEADER.top + HEADER.line)
     context.fillStyle = "#333"
@@ -87,7 +87,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     context.stroke()
 
     context.fillStyle = "#333"
-    context.font = '12px DejaVu'
+    context.font = '12px "DejaVu Sans"'
     context.textAlign = "left"
     context.fillText(`Interval: ${interval}`, FOOTER.left + FOOTER.padding, FOOTER.top + FOOTER.line)
     context.textAlign = "center"
@@ -147,7 +147,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     const descriptionText = function (x1: number, x2: number, text: string) {
         if (x2 - x1 > String(text).length * 8) {
             context.fillStyle = "#333"
-            context.font = '12px DejaVu'
+            context.font = '12px "DejaVu Sans"'
             context.textAlign = "center"
             context.fillText(text, x2 - (x2 - x1) / 2, CHART.padding.bottom + 14.0)
         }
@@ -226,7 +226,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
         context.stroke()
 
         context.fillStyle = "#333"
-        context.font = '12px DejaVu'
+        context.font = '12px "DejaVu Sans"'
         context.textAlign = "left"
         context.fillText(text, CHART.padding.right + 10.0, y + 4.0)
     }
