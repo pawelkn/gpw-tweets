@@ -1,7 +1,12 @@
-FROM node:17.9.0-slim as build
+FROM node:17.9.0-alpine as build
 WORKDIR /app
 
-RUN set -x && apt-get update && apt-get install -y build-essential make python3
+RUN apk add --no-cache sudo build-base g++ libpng libpng-dev jpeg-dev pango-dev cairo-dev giflib-dev python3
+
+RUN apk --no-cache add ca-certificates wget  && \
+    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
+    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.29-r0/glibc-2.29-r0.apk && \
+    apk add glibc-2.29-r0.apk
 
 COPY package.json .
 
@@ -15,16 +20,27 @@ COPY src ./src
 ENV NODE_ENV production
 RUN npm run build
 
-FROM node:17.9.0-slim
+FROM node:17.9.0-alpine
 WORKDIR /app
 
-RUN set -x && apt-get update && apt-get install -y fonts-liberation fonts-dejavu
+RUN apk add --no-cache tzdata curl libpng jpeg pango cairo giflib
+ENV TZ Europe/Warsaw
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-COPY package.json polish-stocks.json ./
-COPY --from=build /app/build ./build
-COPY --from=build /app/node_modules ./node_modules
+RUN apk add --update --repository http://dl-3.alpinelinux.org/alpine/edge/testing \
+    libmount ttf-dejavu fontconfig
+
+COPY package.json .
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/build /app/build
+
+RUN npm prune --production
+
+COPY polish-stocks.json ./
+
+RUN echo "01 19 * * 1-5 cd /app; npm start > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
 
 VOLUME /app/mstall
 VOLUME /app/images
 
-CMD ["node", "build/volume-notifier.js"]
+CMD ["crond", "-f", "-d", "8"]

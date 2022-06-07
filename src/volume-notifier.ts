@@ -1,8 +1,8 @@
 const fs = require('fs')
-const talib = require('talib')
+const cs = require('candlestick')
+const args = require('args-parser')(process.argv)
 
 import TwitterApi from 'twitter-api-v2'
-import { CronJob } from 'cron'
 import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
 
@@ -17,36 +17,18 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullish: { engulfing: string[], belthold: string[] }, bearish: { engulfing: string[], belthold: string[] }}
+type Triggered = { bullish: { engulfing: string[], kicker: string[] }, bearish: { engulfing: string[], kicker: string[] }}
+let triggered: Triggered = { bullish: { engulfing: [], kicker: [] }, bearish: {engulfing: [], kicker: [] }}
 
-new CronJob('0 50 19 * * 1-5', volumeNotifier, null, false, 'Europe/Warsaw').start()
+const twitterApi = new TwitterApi({ ...twitterCredentials })
+const twitterApiRW = twitterApi.readWrite
 
-function volumeNotifier() {
-    const wseQuotes = new WSEQuotes()
-    wseQuotes.update()
-        .then(() => getTriggered(wseQuotes)
-            .then((triggered) => tweetAll(triggered)))
-}
+const wseQuotes = new WSEQuotes()
+wseQuotes.update()
+    .then(() => getTriggered()
+        .then(() => tweetAll()))
 
-async function candlestick(name: string, open: number[], high: number[], low: number[], close: number[] ) {
-    return await new Promise<number>((resolve, reject) => {
-        talib.execute({
-            name: name,
-            startIdx: close.length - 1,
-            endIdx: close.length - 1,
-            open: open,
-            high: high,
-            low: low,
-            close: close
-        }, (err: any, result: any) => {
-            err !== null ? reject(err) : resolve(result.result.outInteger[0])
-        })
-    })
-}
-
-async function getTriggered(wseQuotes: WSEQuotes) {
-    let triggered: Triggered = { bullish: { engulfing: [], belthold: [] }, bearish: {engulfing: [], belthold: [] }}
-
+async function getTriggered() {
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
     const today = `${new Date().getFullYear()}${zeroPad(new Date().getMonth() + 1)}${zeroPad(new Date().getDate())}`
 
@@ -54,31 +36,31 @@ async function getTriggered(wseQuotes: WSEQuotes) {
         try {
             const hist = await wseQuotes.getHistorical(stock.name)
             if (hist.length > 2) {
-                const last = hist[hist.length - 1]
-                if (today !== last.date) {
-                    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: last.date, current: today })
+                const current = hist[hist.length - 1]
+                const previous = hist[hist.length - 2]
+
+                if ((!('no-date-check' in args )) && (today !== current.date)) {
+                    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: current.date, current: today })
+                    console.info('If you want to ignore this check, pass a --no-date-check argument in command line')
                     continue
                 }
 
-                const lastAvg = (last.open + last.high + last.low + last.close) / 4
-                const lastTurnover = lastAvg * last.volume
+                const currentAvg = (current.open + current.high + current.low + current.close) / 4
+                const currentTurnover = currentAvg * current.volume
 
-                if ((last.volume / hist[hist.length - 2].volume > volumeRise) &&
-                    (lastTurnover > minTurnover) &&
-                    (last.close > minPrice)
+                if ((current.volume / previous.volume > volumeRise) &&
+                    (currentTurnover > minTurnover) &&
+                    (current.close > minPrice)
                 ) {
                     const open = hist.map(d => d.open)
                     const high = hist.map(d => d.high)
                     const low = hist.map(d => d.low)
                     const close = hist.map(d => d.close)
 
-                    const engulfing = await candlestick("CDLENGULFING", open, high, low, close)
-                    const belthold = await candlestick("CDLBELTHOLD", open, high, low, close)
-
-                    if (engulfing > 0) triggered.bullish.engulfing.push(stock.name)
-                    if (belthold > 0) triggered.bullish.belthold.push(stock.name)
-                    if (engulfing < 0) triggered.bearish.engulfing.push(stock.name)
-                    if (belthold < 0) triggered.bearish.belthold.push(stock.name)
+                    if (cs.isBullishEngulfing(previous, current)) triggered.bullish.engulfing.push(stock.name)
+                    if (cs.isBullishKicker(previous, current)) triggered.bullish.kicker.push(stock.name)
+                    if (cs.isBearishEngulfing(previous, current)) triggered.bearish.engulfing.push(stock.name)
+                    if (cs.isBearishKicker(previous, current)) triggered.bearish.kicker.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -93,13 +75,11 @@ async function getTriggered(wseQuotes: WSEQuotes) {
     return triggered
 }
 
-async function tweetAll(triggered: Triggered) {
-    const twitterApi = new TwitterApi({ ...twitterCredentials })
-
+async function tweetAll() {
     tweet(twitterApi, triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
-    tweet(twitterApi, triggered.bullish.belthold, 'BULLISH BELT HOLD 📈')
+    tweet(twitterApi, triggered.bullish.kicker, 'KOPNIĘCIE W GÓRĘ 📈')
     tweet(twitterApi, triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
-    tweet(twitterApi, triggered.bearish.belthold, 'BEARISH BELT HOLD 📉')
+    tweet(twitterApi, triggered.bearish.kicker, 'KOPNIĘCIE W DÓŁ 📉')
 }
 
 async function tweet(twitterApi: TwitterApi, stockNames: string[], description: string) {
@@ -112,7 +92,11 @@ async function tweet(twitterApi: TwitterApi, stockNames: string[], description: 
 
     console.log('Tweet', { message: message })
 
-    const twitterApiRW = twitterApi.readWrite
+    if ('dry-run' in args) {
+        console.warn('A --dry-run argument has been passed in command line, no twits are send')
+        return
+    }
+
     const firstFourStockNames = stockNames.slice(0, 4)
     const mediaIds = await Promise.all(firstFourStockNames.map(stockName => twitterApiRW.v1.uploadMedia(`./images/${stockName}.png`)))
     twitterApiRW.v2.tweet(message, { media: { media_ids: mediaIds } })
