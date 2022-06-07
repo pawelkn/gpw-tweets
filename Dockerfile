@@ -20,6 +20,19 @@ COPY src ./src
 ENV NODE_ENV production
 RUN npm run build
 
+FROM node:17.9.0-alpine as test
+WORKDIR /app
+
+COPY package.json .
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/build /app/build
+
+COPY test ./test
+
+RUN npm install mocha -g
+
+CMD ["npm", "run", "test"]
+
 FROM node:17.9.0-alpine
 WORKDIR /app
 
