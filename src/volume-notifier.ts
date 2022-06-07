@@ -76,13 +76,13 @@ async function getTriggered() {
 }
 
 async function tweetAll() {
-    tweet(twitterApi, triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
-    tweet(twitterApi, triggered.bullish.kicker, 'KOPNIĘCIE W GÓRĘ 📈')
-    tweet(twitterApi, triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
-    tweet(twitterApi, triggered.bearish.kicker, 'KOPNIĘCIE W DÓŁ 📉')
+    tweet(triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
+    tweet(triggered.bullish.kicker, 'KOPNIĘCIE W GÓRĘ 📈')
+    tweet(triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
+    tweet(triggered.bearish.kicker, 'KOPNIĘCIE W DÓŁ 📉')
 }
 
-async function tweet(twitterApi: TwitterApi, stockNames: string[], description: string) {
+async function tweet(stockNames: string[], description: string) {
     if (stockNames.length === 0)
         return
 
