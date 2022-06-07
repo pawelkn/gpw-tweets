@@ -1,6 +1,6 @@
 {
   "name": "volume-notifier",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Volume Notifier sends tweets with list of stocks, which volume increased since last trading day",
   "prepare": "npm run build",
   "main": "build/volume-notifier.js",

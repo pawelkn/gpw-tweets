@@ -17,8 +17,8 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullish: { engulfing: string[], kicker: string[] }, bearish: { engulfing: string[], kicker: string[] }}
-let triggered: Triggered = { bullish: { engulfing: [], kicker: [] }, bearish: {engulfing: [], kicker: [] }}
+type Triggered = { bullish: { engulfing: string[] }, bearish: { engulfing: string[] } }
+let triggered: Triggered = { bullish: { engulfing: [] }, bearish: { engulfing: [] } }
 
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
@@ -48,19 +48,14 @@ async function getTriggered() {
                 const currentAvg = (current.open + current.high + current.low + current.close) / 4
                 const currentTurnover = currentAvg * current.volume
 
-                if ((current.volume / previous.volume > volumeRise) &&
-                    (currentTurnover > minTurnover) &&
-                    (current.close > minPrice)
-                ) {
+                if ((current.volume / previous.volume > volumeRise) && (currentTurnover > minTurnover) && (current.close > minPrice)) {
                     const open = hist.map(d => d.open)
                     const high = hist.map(d => d.high)
                     const low = hist.map(d => d.low)
                     const close = hist.map(d => d.close)
 
                     if (cs.isBullishEngulfing(previous, current)) triggered.bullish.engulfing.push(stock.name)
-                    if (cs.isBullishKicker(previous, current)) triggered.bullish.kicker.push(stock.name)
                     if (cs.isBearishEngulfing(previous, current)) triggered.bearish.engulfing.push(stock.name)
-                    if (cs.isBearishKicker(previous, current)) triggered.bearish.kicker.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -77,9 +72,7 @@ async function getTriggered() {
 
 async function tweetAll() {
     tweet(triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
-    tweet(triggered.bullish.kicker, 'KOPNIĘCIE W GÓRĘ 📈')
     tweet(triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
-    tweet(triggered.bearish.kicker, 'KOPNIĘCIE W DÓŁ 📉')
 }
 
 async function tweet(stockNames: string[], description: string) {
