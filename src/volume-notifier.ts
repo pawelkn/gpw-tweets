@@ -81,7 +81,8 @@ async function tweet(stockNames: string[], description: string) {
 
     const message = `Alert wolumenowy #GPW - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
-        `https://stockaggregator.com?tickers=${stockNames.join("%20")}`
+        `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
+        'Podoba się? Nie bądź żyła, podziel się:❤️lub🔁'
 
     console.log('Tweet', { message: message })
 
