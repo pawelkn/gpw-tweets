@@ -8,7 +8,7 @@ Volume notifier is a scanner of GPW (Warsaw Stock Exchange) securities. Every da
 
 ## Configuration
 
-Twitter account configuration. To publish a twit, you must create a twitter developer account on https://developer.twitter.com/ and obtain a *Customer Key and Secret*. Then create a twitter application and obtain an *OAuth Access Token and Secret*.
+Twitter account configuration. To publish a tweet, you must create a twitter developer account on <https://developer.twitter.com/> and obtain a *Customer Key and Secret*. Then create a twitter application and obtain an *OAuth Access Token and Secret*.
 
 Finally create a configuration file *twitter-credentials.json* and enter your sender account settings.
 
@@ -23,7 +23,7 @@ Example (**twitter-credentials.json**):
 }
 ```
 
-Location of the file can be configured using environment variables
+Location of the file can be configured by using environment variables
 
 Example:
 
@@ -31,7 +31,7 @@ Example:
 export VOLUME_NOTIFIER_TWITTER_CREDENTIALS_FILE=/run/secrets/twitter-credentials
 ```
 
-Minium volume change, minimum price and minimum daily turnover of scanned securities can by adjusted using environment variables
+Minium volume change, minimum price and minimum daily turnover of scanned securities can be adjusted by using environment variables
 
 Example (and default values):
 
