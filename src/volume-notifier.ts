@@ -17,8 +17,8 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullish: { engulfing: string[] }, bearish: { engulfing: string[] } }
-let triggered: Triggered = { bullish: { engulfing: [] }, bearish: { engulfing: [] } }
+type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishKicker: string[], bearishKicker: string[], shootingStar: string[], hangingMan: string[] }
+let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishKicker: [], bearishKicker: [], shootingStar: [], hangingMan: [] }
 
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
@@ -54,8 +54,12 @@ async function getTriggered() {
                     const low = hist.map(d => d.low)
                     const close = hist.map(d => d.close)
 
-                    if (cs.isBullishEngulfing(previous, current)) triggered.bullish.engulfing.push(stock.name)
-                    if (cs.isBearishEngulfing(previous, current)) triggered.bearish.engulfing.push(stock.name)
+                    if (cs.isBullishEngulfing(previous, current)) triggered.bullishEngulfing.push(stock.name)
+                    if (cs.isBearishEngulfing(previous, current)) triggered.bearishEngulfing.push(stock.name)
+                    if (cs.isBullishKicker(previous, current)) triggered.bullishKicker.push(stock.name)
+                    if (cs.isBearishKicker(previous, current)) triggered.bearishKicker.push(stock.name)
+                    if (cs.isShootingStar(previous, current)) triggered.shootingStar.push(stock.name)
+                    if (cs.isHangingMan(previous, current)) triggered.hangingMan.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -71,15 +75,19 @@ async function getTriggered() {
 }
 
 async function tweetAll() {
-    tweet(triggered.bullish.engulfing, 'OBJĘCIE HOSSY 📈')
-    tweet(triggered.bearish.engulfing, 'OBJĘCIE BESSY 📉')
+    tweet(triggered.shootingStar, 'SPADAJĄCA GWIAZDA 📉')
+    tweet(triggered.hangingMan, 'WISIELEC 📉')
+    tweet(triggered.bearishKicker, 'KOPNIĘCIE W DÓŁ 📉')
+    tweet(triggered.bearishEngulfing, 'OBJĘCIE BESSY 📉')
+    tweet(triggered.bullishKicker, 'KOPNIĘCIE W GÓRĘ 📈')
+    tweet(triggered.bullishEngulfing, 'OBJĘCIE HOSSY 📈')
 }
 
 async function tweet(stockNames: string[], description: string) {
     if (stockNames.length === 0)
         return
 
-    const message = `Alert wolumenowy #GPW - ${description}\n\n` +
+    const message = `#AlertyGiełdowe - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
         `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
         'Podoba się? Nie bądź żyła, podziel się:❤️lub🔁'
@@ -87,7 +95,7 @@ async function tweet(stockNames: string[], description: string) {
     console.log('Tweet', { message: message })
 
     if ('dry-run' in args) {
-        console.warn('A --dry-run argument has been passed in command line, no twits are send')
+        console.warn('A --dry-run argument has been passed in command line, no tweets are send')
         return
     }
 
