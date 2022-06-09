@@ -25,11 +25,10 @@ WORKDIR /app
 
 COPY package.json .
 COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/build /app/build
 
+COPY tsconfig.json .
+COPY src ./src
 COPY test ./test
-
-RUN npm install mocha -g
 
 CMD ["npm", "run", "test"]
 

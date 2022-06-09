@@ -8,13 +8,13 @@ export default class Candlestick {
     public readonly close: number
     public readonly volume: number
 
-    constructor({ date, open, high, low, close, volume }: { date: string, open: number, high: number, low: number, close: number, volume: number }) {
-        this.date = date
-        this.open = open
-        this.high = high
-        this.low = low
-        this.close = close
-        this.volume = volume
+    constructor({ date, open, high, low, close, volume }: { date?: string, open?: number, high?: number, low?: number, close?: number, volume?: number }) {
+        this.date = date !== undefined ? date : ''
+        this.open = open !== undefined ? open : NaN
+        this.high = high !== undefined ? high : NaN
+        this.low = low !== undefined ? low : NaN
+        this.close = close !== undefined ? close : NaN
+        this.volume = volume !== undefined ? volume : NaN
     }
 
     // Boolean pattern detection

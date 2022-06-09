@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/volume-notifier.js",
-    "test": "mocha"
+    "test": "mocha -r ts-node/register test/**/*.test.ts"
   },
   "keywords": [
     "stock",
@@ -26,9 +26,11 @@
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
+    "@types/mocha": "^9.1.1",
     "@types/node": "^17.0.38",
     "@types/unzipper": "^0.10.5",
     "mocha": "^10.0.0",
+    "ts-node": "^10.8.1",
     "typescript": "^3.9.10"
   }
 }

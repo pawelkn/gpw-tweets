@@ -9,8 +9,10 @@
         "outDir": "build",
         "declaration": true,
         "strictNullChecks": true,
+        "skipLibCheck": true,
         "types": [
-            "node"
+            "node",
+            "mocha"
         ],
         "allowJs": true,
         "checkJs": false
@@ -20,6 +22,7 @@
     ],
     "exclude": [
         "idea",
+        "test",
         "node_modules",
         "**/*.spec.ts",
         "**/*.d.ts"

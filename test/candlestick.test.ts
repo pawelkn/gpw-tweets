@@ -1,5 +1,5 @@
-const assert = require('assert')
-const Candlestick = require('../build/candlestick').default
+import * as assert from 'assert'
+import Candlestick from '../src/candlestick'
 
 describe('candlestick', () => {
     describe('#isBullishKicker()', () => {
