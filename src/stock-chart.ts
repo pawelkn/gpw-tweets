@@ -1,7 +1,6 @@
-import * as fs from "fs"
 import { max, min, log10, round, isNaN } from 'mathjs'
 import { createCanvas } from "canvas"
-import { Candlestick } from './wse-quotes'
+import Candlestick from './candlestick'
 
 const IMAGE = {
     width: 600,

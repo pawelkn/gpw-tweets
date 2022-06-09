@@ -2,8 +2,8 @@ const fs = require('fs')
 const assert = require('assert')
 const WseQuotes = require('../build/wse-quotes').default
 
-describe('WSE Quotes Test', () => {
-    it('getHistorical', async () => {
+describe('#getHistorical()', () => {
+    it('should return valid candlesticks for given name', async () => {
         const wseQuotes = new WseQuotes('./test')
         const data = await wseQuotes.getHistorical('11BIT')
         assert.ok(data.length > 0)

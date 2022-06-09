@@ -5,7 +5,7 @@ import * as path from 'path'
 
 const etl = require('etl')
 
-export type Candlestick = { date: string, open: number, high: number, low: number, close: number, volume: number }
+import Candlestick from './candlestick'
 
 export default class WSEQuotes {
     private path: string
@@ -38,14 +38,14 @@ export default class WSEQuotes {
                 fs.createReadStream(filename)
                     .pipe(etl.csv())
                     .pipe(etl.map((data: any) => {
-                        prices.push({
+                        prices.push(new Candlestick({
                             date: data['<DTYYYYMMDD>'],
                             open: parseFloat(data['<OPEN>']),
                             high: parseFloat(data['<HIGH>']),
                             low: parseFloat(data['<LOW>']),
                             close: parseFloat(data['<CLOSE>']),
                             volume: parseFloat(data['<VOL>'])
-                        })
+                        }))
                     }))
                     .promise()
                     .then(() => resolve(prices), () => reject(new Error(`Failed to parse data file ${filename}`)))

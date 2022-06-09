@@ -1,5 +1,4 @@
 const fs = require('fs')
-const cs = require('candlestick')
 const args = require('args-parser')(process.argv)
 
 import TwitterApi from 'twitter-api-v2'
@@ -17,8 +16,8 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishKicker: string[], bearishKicker: string[], shootingStar: string[], hangingMan: string[] }
-let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishKicker: [], bearishKicker: [], shootingStar: [], hangingMan: [] }
+type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishKicker: string[], bearishKicker: string[], shootingStar: string[], morningStar: string[] }
+let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishKicker: [], bearishKicker: [], shootingStar: [], morningStar: [] }
 
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
@@ -49,17 +48,12 @@ async function getTriggered() {
                 const currentTurnover = currentAvg * current.volume
 
                 if ((current.volume / previous.volume > volumeRise) && (currentTurnover > minTurnover) && (current.close > minPrice)) {
-                    const open = hist.map(d => d.open)
-                    const high = hist.map(d => d.high)
-                    const low = hist.map(d => d.low)
-                    const close = hist.map(d => d.close)
-
-                    if (cs.isBullishEngulfing(previous, current)) triggered.bullishEngulfing.push(stock.name)
-                    if (cs.isBearishEngulfing(previous, current)) triggered.bearishEngulfing.push(stock.name)
-                    if (cs.isBullishKicker(previous, current)) triggered.bullishKicker.push(stock.name)
-                    if (cs.isBearishKicker(previous, current)) triggered.bearishKicker.push(stock.name)
-                    if (cs.isShootingStar(previous, current)) triggered.shootingStar.push(stock.name)
-                    if (cs.isHangingMan(previous, current)) triggered.hangingMan.push(stock.name)
+                    if (current.isBullishEngulfing(previous)) triggered.bullishEngulfing.push(stock.name)
+                    if (current.isBearishEngulfing(previous)) triggered.bearishEngulfing.push(stock.name)
+                    if (current.isBullishKicker(previous)) triggered.bullishKicker.push(stock.name)
+                    if (current.isBearishKicker(previous)) triggered.bearishKicker.push(stock.name)
+                    if (current.isShootingStar(previous)) triggered.shootingStar.push(stock.name)
+                    if (current.isMorningStar(previous)) triggered.morningStar.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -76,9 +70,9 @@ async function getTriggered() {
 
 async function tweetAll() {
     tweet(triggered.shootingStar, 'SPADAJĄCA GWIAZDA 📉')
-    tweet(triggered.hangingMan, 'WISIELEC 📉')
     tweet(triggered.bearishKicker, 'KOPNIĘCIE W DÓŁ 📉')
     tweet(triggered.bearishEngulfing, 'OBJĘCIE BESSY 📉')
+    tweet(triggered.morningStar, 'GWIAZDA PORANNA 📈')
     tweet(triggered.bullishKicker, 'KOPNIĘCIE W GÓRĘ 📈')
     tweet(triggered.bullishEngulfing, 'OBJĘCIE HOSSY 📈')
 }
@@ -90,7 +84,7 @@ async function tweet(stockNames: string[], description: string) {
     const message = `#AlertyGiełdowe - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
         `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
-        'Podoba się? Nie bądź żyła, podziel się:❤️lub🔁'
+        'Podoba się? Podziel się:❤️lub🔁'
 
     console.log('Tweet', { message: message })
 

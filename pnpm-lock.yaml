@@ -4,7 +4,6 @@ specifiers:
   '@types/node': ^17.0.38
   '@types/unzipper': ^0.10.5
   args-parser: ^1.3.0
-  candlestick: ^0.0.5
   canvas: ^2.9.1
   etl: ^0.7.0
   mathjs: ^10.6.1
@@ -15,7 +14,6 @@ specifiers:
 
 dependencies:
   args-parser: 1.3.0
-  candlestick: 0.0.5
   canvas: 2.9.1
   etl: 0.7.0
   mathjs: 10.6.1
@@ -195,11 +193,6 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
     dev: true
-
-  /candlestick/0.0.5:
-    resolution: {integrity: sha512-/UBR1ev7Wr4cM65WAXkptlap/1oYgb3dse1wbCHuaK4oBnxYNFMes+5CbnUFLCfAq43t7JoNgE4wA8IJR7ul1Q==}
-    engines: {node: '>=12'}
-    dev: false
 
   /canvas/2.9.1:
     resolution: {integrity: sha512-vSQti1uG/2gjv3x6QLOZw7TctfufaerTWbVe+NSduHxxLGB+qf3kFgQ6n66DSnuoINtVUjrLLIK2R+lxrBG07A==}
