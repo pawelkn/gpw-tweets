@@ -81,7 +81,7 @@ async function tweet(stockNames: string[], description: string) {
     if (stockNames.length === 0)
         return
 
-    const message = `#AlertyGiełdowe - ${description}\n\n` +
+    const message = `#AlertyGiełdowe #GPW - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
         `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
         'Podziel się: ❤️ lub 🔁'
