@@ -398,7 +398,6 @@
 {"symbol":"JWA.PL","ISIN":"PLJWASA00013","name":"JWA","quotationTable":"9"},
 {"symbol":"JWW.PL","ISIN":"PLJWWNT00018","name":"JWWINVEST","quotationTable":"8"},
 {"symbol":"K2H.PL","ISIN":"PLK2ITR00010","name":"K2HOLDING","quotationTable":"9"},
-{"symbol":"K2I.PL","ISIN":"PLK2ITR00010","name":"K2HOLDING","quotationTable":"9"},
 {"symbol":"K2P.PL","ISIN":"PLKL2PL00014","name":"KOOL2PLAY","quotationTable":"9"},
 {"symbol":"KBD.PL","ISIN":"PLTRAST00020","name":"KBDOM","quotationTable":"8"},
 {"symbol":"KBJ.PL","ISIN":"PLKBJ0000016","name":"KBJ","quotationTable":"9"},
