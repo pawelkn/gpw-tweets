@@ -44,7 +44,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
     const current_price = stock_data[stock_data.length - 1].close
     const last_price = stock_data[stock_data.length - 2].close
-    const price_change = (1 - last_price / current_price) * 100
+    const price_change = (current_price / last_price - 1) * 100
 
     const date = new Date(stock_data[stock_data.length - 1].date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
