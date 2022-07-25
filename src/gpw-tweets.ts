@@ -5,10 +5,10 @@ import TwitterApi from 'twitter-api-v2'
 import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
 
-const twitterCredentialsFile = process.env.VOLUME_NOTIFIER_TWITTER_CREDENTIALS_FILE || 'twitter-credentials.json'
-const volumeRise = process.env.VOLUME_NOTIFIER_VOLUME_RISE || 2.0
-const minTurnover = process.env.VOLUME_NOTIFIER_MIN_TURNOVER || 50_000
-const minPrice = process.env.VOLUME_NOTIFIER_MIN_PRICE || 2.0
+const twitterCredentialsFile = process.env.GPW_TWEETS_TWITTER_CREDENTIALS_FILE || 'twitter-credentials.json'
+const volumeRise = process.env.GPW_TWEETS_VOLUME_RISE || 2.0
+const minTurnover = process.env.GPW_TWEETS_MIN_TURNOVER || 50_000
+const minPrice = process.env.GPW_TWEETS_MIN_PRICE || 2.0
 
 type PolishStock = { symbol: string, ISIN: string, name: string, quotationTable: string }
 const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.json', { encoding: 'utf8', flag: 'r' }))

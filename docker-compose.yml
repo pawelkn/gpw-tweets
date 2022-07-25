@@ -1,9 +1,9 @@
 version: '2'
 
 services:
-  volume-notifier:
+  gpw-tweets:
     build: .
-    command: node build/volume-notifier.js --dry-run --no-date-check
+    command: node build/gpw-tweets.js --dry-run --no-date-check
     volumes:
       - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
       - ${PWD}/mstall:/app/mstall

@@ -1,19 +1,20 @@
 {
-  "name": "volume-notifier",
+  "name": "gpw-tweets",
   "version": "1.6.5",
-  "description": "Volume Notifier sends tweets with list of stocks, which volume increased since last trading day",
+  "description": "GPW Tweets is a scanner of GPW (Warsaw Stock Exchange) securities. Every day checks each company quotations, searching for volume increase and candlestick pattern matches. Scan results are published on Twitter.",
   "prepare": "npm run build",
-  "main": "build/volume-notifier.js",
-  "types": "build/volume-notifier.d.ts",
+  "main": "build/gpw-tweets.js",
+  "types": "build/gpw-tweets.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node build/volume-notifier.js",
+    "start": "node build/gpw-tweets.js",
     "test": "mocha -r ts-node/register test/**/*.test.ts"
   },
   "keywords": [
     "stock",
     "gpw",
-    "volume"
+    "tweets",
+    "twitter"
   ],
   "author": "Paweł Knioła",
   "license": "MIT",

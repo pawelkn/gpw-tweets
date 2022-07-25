@@ -1,8 +1,8 @@
-# Volume notifier
+# GPW Tweets
 
-[![Test](https://github.com/pawelkn/volume-notifier/actions/workflows/test.yml/badge.svg)](https://github.com/pawelkn/volume-notifier/actions/workflows/test.yml)
+[![Test](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml/badge.svg)](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml)
 
-Volume notifier is a scanner of GPW (Warsaw Stock Exchange) securities. Every day checks each company quotations, searching for volume increase and candlestick pattern matches. Scan results are published on twitter.
+GPW Tweets is a scanner of GPW (Warsaw Stock Exchange) securities. Every day checks each company quotations, searching for volume increase and candlestick pattern matches. Scan results are published on Twitter.
 
 <p align="center"><img src="screenshot.png"/></p>
 
@@ -28,7 +28,7 @@ Location of the file can be configured by using environment variables
 Example:
 
 ```sh
-export VOLUME_NOTIFIER_TWITTER_CREDENTIALS_FILE=/run/secrets/twitter-credentials
+export GPW_TWEETS_TWITTER_CREDENTIALS_FILE=/run/secrets/twitter-credentials
 ```
 
 Minium volume change, minimum price and minimum daily turnover of scanned securities can be adjusted by using environment variables
@@ -36,9 +36,9 @@ Minium volume change, minimum price and minimum daily turnover of scanned securi
 Example (and default values):
 
 ```sh
-export VOLUME_NOTIFIER_VOLUME_RISE=2.0
-export VOLUME_NOTIFIER_MIN_TURNOVER=50_000
-export VOLUME_NOTIFIER_MIN_PRICE=2.0
+export GPW_TWEETS_VOLUME_RISE=2.0
+export GPW_TWEETS_MIN_TURNOVER=50_000
+export GPW_TWEETS_MIN_PRICE=2.0
 ```
 
 ## Run
@@ -84,6 +84,6 @@ npm run test
 or using docker
 
 ```sh
-docker build -t volume-notifier-test --target test .
-docker run --rm volume-notifier-test
+docker build -t gpw-tweets-test --target test .
+docker run --rm gpw-tweets-test
 ```
