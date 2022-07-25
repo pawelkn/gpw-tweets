@@ -105,6 +105,16 @@ export default class Candlestick {
             !(this.isHammer() || this.isInvertedHammer());
     }
 
+    public isBullishGap(previous: Candlestick) {
+        return this.isBullish() &&
+            this.hasGapUp(previous)
+    }
+
+    public isBearishGap(previous: Candlestick) {
+        return this.isBearish() &&
+            this.hasGapDown(previous)
+    }
+
     private bodyLen() {
         return abs(this.open - this.close);
     }
@@ -137,10 +147,10 @@ export default class Candlestick {
     }
 
     private hasGapUp(previous: Candlestick) {
-        return previous.bodyEnds().top < this.bodyEnds().bottom;
+        return previous.high < this.low;
     }
 
     private hasGapDown(previous: Candlestick) {
-        return previous.bodyEnds().bottom > this.bodyEnds().top;
+        return previous.low > this.high;
     }
 }
