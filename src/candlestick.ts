@@ -115,6 +115,18 @@ export default class Candlestick {
             this.hasGapDown(previous)
     }
 
+    public isBullishSmash(previous: Candlestick) {
+        return previous.isBearishInvertedHammer() &&
+            this.isBullish() &&
+            (this.close > previous.high)
+    }
+
+    public isBearishSmash(previous: Candlestick) {
+        return previous.isBullishHammer() &&
+            this.isBearish() &&
+            (this.close < previous.low)
+    }
+
     private bodyLen() {
         return abs(this.open - this.close);
     }

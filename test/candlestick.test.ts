@@ -145,4 +145,56 @@ describe('candlestick', () => {
             assert.equal(true, curr.isBearishGap(prev))
         })
     })
+
+    describe('#isBullishSmash()', () => {
+        it('should return false when previous candle is not bearish', () => {
+            const prev = new Candlestick({ open: 2.5, high: 7, low: 2, close: 3 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 8 })
+            assert.equal(false, curr.isBullishSmash(prev))
+        })
+
+        it('should return false when current candle is not bullish', () => {
+            const prev = new Candlestick({ open: 3, high: 7, low: 2, close: 2.5 })
+            const curr = new Candlestick({ open: 8, high: 8, low: 3, close: 3 })
+            assert.equal(false, curr.isBullishSmash(prev))
+        })
+
+        it('should return false when previous candle is not inverted hammer', () => {
+            const prev = new Candlestick({ open: 6, high: 7, low: 2, close: 6 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 8 })
+            assert.equal(false, curr.isBullishSmash(prev))
+        })
+
+        it('should return true when current candle is bullish and previous candle is bearish inverted hammer', () => {
+            const prev = new Candlestick({ open: 3.5, high: 7, low: 2, close: 2.5 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 8 })
+            assert.equal(true, curr.isBullishSmash(prev))
+        })
+    })
+
+    describe('#isBearishSmash()', () => {
+        it('should return false when previous candle is not bullish', () => {
+            const prev = new Candlestick({ open: 6.5, high: 7, low: 2, close: 5.5 })
+            const curr = new Candlestick({ open: 6, high: 6, low: 1, close: 1 })
+            assert.equal(false, curr.isBearishSmash(prev))
+        })
+
+        it('should return false when current candle is not bearish', () => {
+            const prev = new Candlestick({ open: 5.5, high: 7, low: 2, close: 6.5 })
+            const curr = new Candlestick({ open: 1, high: 6, low: 1, close: 6 })
+            assert.equal(false, curr.isBearishSmash(prev))
+        })
+
+        it('should return false when previous candle is not hammer', () => {
+            const prev = new Candlestick({ open: 5.5, high: 7, low: 2, close: 3 })
+            const curr = new Candlestick({ open: 6, high: 6, low: 1, close: 1 })
+            assert.equal(false, curr.isBearishSmash(prev))
+        })
+
+        it('should return true when current candle is bearish and previous candle is bullish hammer', () => {
+            const prev = new Candlestick({ open: 5.5, high: 7, low: 2, close: 6.5 })
+            const curr = new Candlestick({ open: 6, high: 6, low: 1, close: 1 })
+            assert.equal(true, curr.isBearishSmash(prev))
+        })
+    })
 })

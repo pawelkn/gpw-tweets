@@ -16,8 +16,8 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishGap: string[], bearishGap: string[], morningStar: string[], shootingStar: string[] }
-let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishGap: [], bearishGap: [], morningStar: [], shootingStar: []}
+type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishGap: string[], bearishGap: string[], morningStar: string[], shootingStar: string[], bearishSmash: string[], bullishSmash: string[] }
+let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishGap: [], bearishGap: [], morningStar: [], shootingStar: [], bearishSmash: [], bullishSmash: [] }
 
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
@@ -54,6 +54,8 @@ async function getTriggered() {
                     if (current.isBearishGap(previous)) triggered.bearishGap.push(stock.name)
                     if (current.isMorningStar(previous)) triggered.morningStar.push(stock.name)
                     if (current.isShootingStar(previous)) triggered.shootingStar.push(stock.name)
+                    if (current.isBullishSmash(previous)) triggered.bullishSmash.push(stock.name)
+                    if (current.isBearishSmash(previous)) triggered.bearishSmash.push(stock.name)
 
                     const image = stockChart(stock.name, hist.slice(-60))
                     if (image)
@@ -75,6 +77,8 @@ async function tweetAll() {
     const bearishGapTweet = await tweet(triggered.bearishGap, 'LUKA BESSY 📉')
     const morningStarTweet = await tweet(triggered.morningStar, 'GWIAZDA PORANNA 📈')
     const shootingStarTweet = await tweet(triggered.shootingStar, 'SPADAJĄCA GWIAZDA 📉')
+    const bullishSmashTweet = await tweet(triggered.bullishSmash, 'FORMACJA SMASH KUPNA 📈')
+    const bearishSmashTweet = await tweet(triggered.bearishSmash, 'FORMACJA SMASH SPRZEDAŻY 📉')
 
     let tweets = []
     if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
@@ -83,6 +87,8 @@ async function tweetAll() {
     if(bearishGapTweet) tweets.push(bearishGapTweet)
     if(morningStarTweet) tweets.push(morningStarTweet)
     if(shootingStarTweet) tweets.push(shootingStarTweet)
+    if(bullishSmashTweet) tweets.push(bullishSmashTweet)
+    if(bearishSmashTweet) tweets.push(bearishSmashTweet)
 
     if(tweets.length !== 0)
         twitterApiRW.v2.tweetThread(tweets)
