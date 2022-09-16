@@ -57,13 +57,13 @@ export default class Candlestick {
 
     public isShootingStar(previous: Candlestick) {
         return previous.isBullish() &&
-            this.isBearishInvertedHammer() &&
+            this.isInvertedHammer() &&
             this.hasGapUp(previous);
     }
 
     public isMorningStar(previous: Candlestick) {
         return previous.isBearish() &&
-            this.isBullishHammer() &&
+            this.isHammer() &&
             this.hasGapDown(previous);
     }
 
