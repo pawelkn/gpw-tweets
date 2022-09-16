@@ -116,13 +116,13 @@ export default class Candlestick {
     }
 
     public isBullishSmash(previous: Candlestick) {
-        return previous.isBearishInvertedHammer() &&
+        return previous.isInvertedHammer() &&
             this.isBullish() &&
             (this.close > previous.high)
     }
 
     public isBearishSmash(previous: Candlestick) {
-        return previous.isBullishHammer() &&
+        return previous.isHammer() &&
             this.isBearish() &&
             (this.close < previous.low)
     }
