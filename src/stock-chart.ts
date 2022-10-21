@@ -90,7 +90,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     context.textAlign = "left"
     context.fillText(`Interval: ${interval}`, FOOTER.left + FOOTER.padding, FOOTER.top + FOOTER.line)
     context.textAlign = "center"
-    context.fillText("\u00A9 stockaggregator.com", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
+    context.fillText("@PawelKniola", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
     context.textAlign = "right"
     context.fillText(last_update, FOOTER.left + FOOTER.width - FOOTER.padding, FOOTER.top + FOOTER.line)
 
