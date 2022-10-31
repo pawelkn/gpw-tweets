@@ -57,7 +57,7 @@ async function getTriggered() {
                     if (current.isBullishSmash(previous)) triggered.bullishSmash.push(stock.name)
                     if (current.isBearishSmash(previous)) triggered.bearishSmash.push(stock.name)
 
-                    const image = stockChart(stock.name, hist.slice(-60))
+                    const image = stockChart(stock.name, hist.slice(-110))
                     if (image)
                         fs.writeFileSync(`./images/${stock.name}.png`, image);
                 }
