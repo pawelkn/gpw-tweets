@@ -3,7 +3,7 @@ version: '2'
 services:
   gpw-tweets:
     build: .
-    command: node build/gpw-tweets.js --dry-run --no-date-check
+    command: node build/gpw-tweets.js
     volumes:
       - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
       - ${PWD}/mstall:/app/mstall
