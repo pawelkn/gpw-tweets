@@ -38,17 +38,10 @@ const FOOTER = {
     line: 24
 }
 
-export default function stockChart(description: string, stock_data: Candlestick[], currency: string = 'PLN', period: string = '3m', interval: string = '1 day') {
-    if (stock_data.length < 2)
+export default function stockChart(description: string, data: Candlestick[], date: string, price: number, priceChange: number,
+                                   grid: string = 'day', interval: string = '1 day', currency: string = 'PLN') {
+    if (data.length < 2)
         return null
-
-    const current_price = stock_data[stock_data.length - 1].close
-    const last_price = stock_data[stock_data.length - 2].close
-    const price_change = (current_price / last_price - 1) * 100
-
-    const date = new Date(stock_data[stock_data.length - 1].date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-    const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
-    const last_update = `${date.getFullYear()}-${zeroPad(date.getMonth() + 1)}-${zeroPad(date.getDate())}`
 
     const canvas = createCanvas(IMAGE.width, IMAGE.height)
     const context = canvas.getContext("2d")
@@ -69,13 +62,13 @@ export default function stockChart(description: string, stock_data: Candlestick[
     context.font = 'bold 28px "DejaVu Sans"'
     context.textAlign = "left"
     context.fillText(description, HEADER.left + HEADER.padding, HEADER.top + HEADER.line)
-    context.fillStyle = (price_change !== 0 ? (price_change > 0 ? "green" : "red") : "grey")
+    context.fillStyle = (priceChange !== 0 ? (priceChange > 0 ? "green" : "red") : "grey")
     context.font = '28px "DejaVu Sans"'
     context.textAlign = "center"
-    context.fillText(`${price_change.toFixed(2)}% ${price_change != 0 ? (price_change > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, HEADER.left + HEADER.width/2, HEADER.top + HEADER.line)
+    context.fillText(`${priceChange.toFixed(2)}% ${priceChange != 0 ? (priceChange > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, HEADER.left + HEADER.width/2, HEADER.top + HEADER.line)
     context.fillStyle = "#333"
     context.textAlign = "right"
-    context.fillText(`${current_price.toFixed(2)} ${currency}`, HEADER.left + HEADER.width - HEADER.padding, HEADER.top + HEADER.line)
+    context.fillText(`${price.toFixed(2)} ${currency}`, HEADER.left + HEADER.width - HEADER.padding, HEADER.top + HEADER.line)
 
     // footer
     context.lineWidth = 1
@@ -90,9 +83,9 @@ export default function stockChart(description: string, stock_data: Candlestick[
     context.textAlign = "left"
     context.fillText(`Interval: ${interval}`, FOOTER.left + FOOTER.padding, FOOTER.top + FOOTER.line)
     context.textAlign = "center"
-    context.fillText("@PawelKniola", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
+    context.fillText("© Paweł Knioła", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
     context.textAlign = "right"
-    context.fillText(last_update, FOOTER.left + FOOTER.width - FOOTER.padding, FOOTER.top + FOOTER.line)
+    context.fillText(date, FOOTER.left + FOOTER.width - FOOTER.padding, FOOTER.top + FOOTER.line)
 
     // chart
     context.fillStyle = "#fff"
@@ -100,13 +93,13 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
     let highest = NaN
     let lowest = NaN
-    let vol_highest = NaN
+    let volHighest = NaN
 
-    for (const d of stock_data) {
-        if (isNaN(highest) || isNaN(lowest) || isNaN(vol_highest)) {
+    for (const d of data) {
+        if (isNaN(highest) || isNaN(lowest) || isNaN(volHighest)) {
             highest = d.high
             lowest = d.low
-            vol_highest = d.volume
+            volHighest = d.volume
         } else {
             if (highest < d.high) {
                 highest = d.high
@@ -114,8 +107,8 @@ export default function stockChart(description: string, stock_data: Candlestick[
             if (lowest > d.low) {
                 lowest = d.low
             }
-            if (vol_highest < d.volume) {
-                vol_highest = d.volume
+            if (volHighest < d.volume) {
+                volHighest = d.volume
             }
         }
     }
@@ -132,7 +125,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     let logScale = (x: number) => round(a1 * log10(x) + b1) + 0.5
     let reverseLogScale = (y:number) => 10 ** ((y - b1) / a1)
 
-    x1 = vol_highest
+    x1 = volHighest
     x2 = 0
 
     let a2 = (y1 - y2) / (x1 - x2)
@@ -141,7 +134,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
     let linScale = (x: number) => round(a2 * x + b2) + 0.5
 
     // vertical grid
-    const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
+    const verticalSpace = (CHART.padding.right - CHART.padding.left) / (data.length)
 
     const descriptionText = function (x1: number, x2: number, text: string) {
         if (x2 - x1 > String(text).length * 8) {
@@ -167,26 +160,21 @@ export default function stockChart(description: string, stock_data: Candlestick[
     x1 = NaN
     x2 = CHART.padding.left
 
-    let grid: string = 'day'
-    if ((period == '3m') || (period == '5m') || (period == '12m')) grid = 'month'
-    else if ((period == '3y') || (period == '5y') || (period == '10y')) grid = 'year'
-    else if ((period == '20y') || (period == '30y')) grid = 'decade'
+    let lastDate: Date | null = null
 
-    let last_date: Date | null = null
-
-    for (let i = 0; i < stock_data.length; i++) {
-        const e = stock_data[i]
+    for (let i = 0; i < data.length; i++) {
+        const e = data[i]
         const date = new Date(e.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-        if (last_date === null)
-            last_date = date
+        if (lastDate === null)
+            lastDate = date
 
         else {
-            if (((grid == 'day') && (last_date.getDate() != date.getDate())) ||
-                ((grid == 'month') && (last_date.getMonth() != date.getMonth())) ||
-                ((grid == 'year') && (last_date.getFullYear() != date.getFullYear())) ||
-                ((grid == 'decade') && (last_date.getFullYear() != date.getFullYear()) && (date.getFullYear() % 10 == 0))) {
+            if (((grid == 'day') && (lastDate.getDate() != date.getDate())) ||
+                ((grid == 'month') && (lastDate.getMonth() != date.getMonth())) ||
+                ((grid == 'year') && (lastDate.getFullYear() != date.getFullYear())) ||
+                ((grid == 'decade') && (lastDate.getFullYear() != date.getFullYear()) && (date.getFullYear() % 10 == 0))) {
                 x1 = x2
-                x2 = round(CHART.padding.left + vertical_space * i) + 0.5
+                x2 = round(CHART.padding.left + verticalSpace * i) + 0.5
 
                 context.lineWidth = 1
                 context.strokeStyle = '#ddd'
@@ -195,14 +183,14 @@ export default function stockChart(description: string, stock_data: Candlestick[
                 context.lineTo(x2, CHART.padding.bottom + 10.0)
                 context.stroke()
 
-                descriptionText(x1, x2, dateFormat(last_date, grid))
+                descriptionText(x1, x2, dateFormat(lastDate, grid))
 
-                last_date = date
+                lastDate = date
             }
 
-            else if (stock_data.length == i + 1) {
+            else if (data.length == i + 1) {
                 x1 = x2
-                x2 = round(CHART.padding.left + vertical_space * stock_data.length) + 0.5
+                x2 = round(CHART.padding.left + verticalSpace * data.length) + 0.5
 
                 descriptionText(x1, x2, dateFormat(date, grid))
             }
@@ -210,11 +198,11 @@ export default function stockChart(description: string, stock_data: Candlestick[
     }
 
     // horizontal grid
-    const horizontal_count = 5
-    const horizontal_space = (CHART.padding.bottom - CHART.padding.top) / (horizontal_count - 1)
+    const horizontalCount = 5
+    const horizontalSpace = (CHART.padding.bottom - CHART.padding.top) / (horizontalCount - 1)
 
-    for (let i = 0; i < horizontal_count; i++) {
-        let y = round(CHART.padding.top + horizontal_space * i) + 0.5
+    for (let i = 0; i < horizontalCount; i++) {
+        let y = round(CHART.padding.top + horizontalSpace * i) + 0.5
         const text = reverseLogScale(y) ? Number(reverseLogScale(y)).toFixed(reverseLogScale(y) < 1000 ? 2 : 0) : ""
 
         context.lineWidth = 1
@@ -232,34 +220,34 @@ export default function stockChart(description: string, stock_data: Candlestick[
 
     // volume bars
 
-    for (let i = 0; i < stock_data.length; i++) {
-        const e = stock_data[i]
-        const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
-        let stroke_width = vertical_space > 7.0 ? 1.0 : 0.0
+    for (let i = 0; i < data.length; i++) {
+        const e = data[i]
+        const verticalSpace = (CHART.padding.right - CHART.padding.left) / (data.length)
+        let strokeWidth = verticalSpace > 7.0 ? 1.0 : 0.0
 
-        let center = round(CHART.padding.left + vertical_space * (i + 0.5)) + 0.5
-        let width = 2.0 + stroke_width
+        let center = round(CHART.padding.left + verticalSpace * (i + 0.5)) + 0.5
+        let width = 2.0 + strokeWidth
         let left = center - width / 2
 
-        let vol_width = width + stroke_width * 2
-        let vol_left = left - stroke_width
+        let volWidth = width + strokeWidth * 2
+        let volLeft = left - strokeWidth
 
-        let vol_top = linScale(e.volume) - stroke_width
-        let vol_bottom = linScale(0) + stroke_width
-        let vol_height = vol_bottom - vol_top
+        let volTop = linScale(e.volume) - strokeWidth
+        let volBottom = linScale(0) + strokeWidth
+        let volHeight = volBottom - volTop
 
         context.fillStyle = "#eee"
-        context.fillRect(vol_left, vol_top, vol_width, vol_height)
+        context.fillRect(volLeft, volTop, volWidth, volHeight)
     }
 
     // candle bars
 
-    for (let i = 0; i < stock_data.length; i++) {
-        const e = stock_data[i]
-        const vertical_space = (CHART.padding.right - CHART.padding.left) / (stock_data.length)
+    for (let i = 0; i < data.length; i++) {
+        const e = data[i]
+        const verticalSpace = (CHART.padding.right - CHART.padding.left) / (data.length)
 
-        let center = round(CHART.padding.left + vertical_space * (i + 0.5)) + 0.5
-        let width = vertical_space > 7.0 ? 4.0 : 2.0
+        let center = round(CHART.padding.left + verticalSpace * (i + 0.5)) + 0.5
+        let width = verticalSpace > 7.0 ? 4.0 : 2.0
         let left = center - width / 2
         let right = left + width
 
@@ -269,7 +257,7 @@ export default function stockChart(description: string, stock_data: Candlestick[
         let bottom = logScale(min(e.close, e.open))
         let height = ((bottom - top) > 1.0 ? bottom - top : 0.0)
 
-        let highlight = i > 0 && stock_data[i].volume > stock_data[i-1].volume * 2.0
+        let highlight = i > 0 && data[i].volume > data[i-1].volume * 2.0
         let upcandle = e.close > e.open
 
         context.lineWidth = 1
