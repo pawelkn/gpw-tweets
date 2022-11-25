@@ -818,7 +818,6 @@
 {"symbol":"ZRE.PL","ISIN":"PLZBMZC00019","name":"ZREMB","quotationTable":"9"},
 {"symbol":"ZRE.PL","ISIN":"EE3100065392","name":"ZREMB","quotationTable":"9"},
 {"symbol":"ZUE.PL","ISIN":"PLZUE0000015","name":"ZUE","quotationTable":"9"},
-{"symbol":"ZUE.PL","ISIN":"PLCVTNH00040","name":"ZUE","quotationTable":"9"},
 {"symbol":"ZUK.PL","ISIN":"PLSTPRK00019","name":"STAPORKOW","quotationTable":"9"},
 {"symbol":"ZWC.PL","ISIN":"PLZYWIC00016","name":"ZYWIEC","quotationTable":"9"}
 ]
