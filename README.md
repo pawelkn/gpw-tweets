@@ -60,6 +60,7 @@ npm start
 
 Optional command line options:
 
+* *--weekly* - use a week interval
 * *--dry-run* - do not post anything on twitter, just dummy application run
 * *--no-date-check* - do not verify securities last quotation date
 

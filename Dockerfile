@@ -50,7 +50,8 @@ RUN npm prune --production
 
 COPY polish-stocks.json ./
 
-RUN echo "01 19 * * 1-5 cd /app; npm start > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
+RUN echo "01 19 * * 1-5 cd /app; npm start > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root && \
+    echo "01 20 * * 5 cd /app; npm start --weekly > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
 
 VOLUME /app/mstall
 VOLUME /app/images

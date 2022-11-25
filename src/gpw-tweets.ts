@@ -1,6 +1,6 @@
-const fs = require('fs')
 const args = require('args-parser')(process.argv)
 
+import * as fs from 'fs'
 import TwitterApi from 'twitter-api-v2'
 import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
@@ -16,69 +16,93 @@ const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.js
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
 const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitterCredentialsFile, { encoding: 'utf8', flag: 'r' }))
 
-type Triggered = { bullishEngulfing: string[] , bearishEngulfing: string[], bullishGap: string[], bearishGap: string[], morningStar: string[], shootingStar: string[], bearishSmash: string[], bullishSmash: string[] }
-let triggered: Triggered = { bullishEngulfing: [] , bearishEngulfing: [], bullishGap: [], bearishGap: [], morningStar: [], shootingStar: [], bearishSmash: [], bullishSmash: [] }
-
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
 
+const bullishEngulfing: string[] = []
+const bearishEngulfing: string[] = []
+const bullishGap: string[] = []
+const bearishGap: string[] = []
+const morningStar: string[] = []
+const shootingStar: string[] = []
+const bearishSmash: string[] = []
+const bullishSmash: string[] = []
+
 const wseQuotes = new WSEQuotes()
 wseQuotes.update()
-    .then(() => getTriggered()
+    .then(() => scan()
         .then(() => tweetAll()))
 
-async function getTriggered() {
+async function scan() {
     const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
     const today = `${new Date().getFullYear()}${zeroPad(new Date().getMonth() + 1)}${zeroPad(new Date().getDate())}`
 
     for (const stock of polishStocks) {
         try {
-            const hist = await wseQuotes.getHistorical(stock.name)
-            if (hist.length > 2) {
-                const current = hist[hist.length - 1]
-                const previous = hist[hist.length - 2]
+            let hist = await wseQuotes.getHistorical(stock.name)
+            if (hist.length < 2)
+                continue
 
-                if ((!('no-date-check' in args )) && (today !== current.date)) {
-                    console.warn('Date of last entry differs with a current date. Skipping', { name: stock.name, date: current.date, current: today })
-                    console.info('If you want to ignore this check, pass a --no-date-check argument in command line')
-                    continue
-                }
+            const last = hist[hist.length - 1]
+            const lastDate = `${+last.date.substring(0, 4)}-${+last.date.substring(4, 6) - 1}-${+last.date.substring(6, 8)}`
+            const lastPrice = last.close
+            const priceChange = (lastPrice / hist[hist.length - 2].close - 1) * 100
 
-                const currentAvg = (current.open + current.high + current.low + current.close) / 4
-                const currentTurnover = currentAvg * current.volume
+            if ((!('no-date-check' in args)) && (today !== last.date)) {
+                console.warn('Date of last candlestick differs with a current date. Skipping', { name: stock.name, last: last.date, current: today })
+                console.info('If you want to ignore this check, pass a --no-date-check argument in command line')
+                continue
+            }
 
-                if ((current.volume / previous.volume > volumeRise) && (currentTurnover > minTurnover) && (current.close > minPrice)) {
-                    if (current.isBullishEngulfing(previous)) triggered.bullishEngulfing.push(stock.name)
-                    if (current.isBearishEngulfing(previous)) triggered.bearishEngulfing.push(stock.name)
-                    if (current.isBullishGap(previous)) triggered.bullishGap.push(stock.name)
-                    if (current.isBearishGap(previous)) triggered.bearishGap.push(stock.name)
-                    if (current.isMorningStar(previous)) triggered.morningStar.push(stock.name)
-                    if (current.isShootingStar(previous)) triggered.shootingStar.push(stock.name)
-                    if (current.isBullishSmash(previous)) triggered.bullishSmash.push(stock.name)
-                    if (current.isBearishSmash(previous)) triggered.bearishSmash.push(stock.name)
+            hist = wseQuotes.resample(hist, 'weekly' in args ? 'W' : 'D')
+            if (hist.length < 2)
+                continue
 
-                    const image = stockChart(stock.name, hist.slice(-110))
-                    if (image)
-                        fs.writeFileSync(`./images/${stock.name}.png`, image);
-                }
+            const current = hist[hist.length - 1]
+            const previous = hist[hist.length - 2]
+
+            const currentAvg = (current.open + current.high + current.low + current.close) / 4
+            const currentTurnover = currentAvg * current.volume
+
+            if ((current.volume / previous.volume < volumeRise) || (currentTurnover < minTurnover) || (current.close < minPrice))
+                continue
+
+            let triggered = false
+            if (current.isBullishEngulfing(previous)) { bullishEngulfing.push(stock.name); triggered = true }
+            if (current.isBearishEngulfing(previous)) { bearishEngulfing.push(stock.name); triggered = true }
+            if (current.isBullishGap(previous)) { bullishGap.push(stock.name); triggered = true }
+            if (current.isBearishGap(previous)) { bearishGap.push(stock.name); triggered = true }
+            if (current.isMorningStar(previous)) { morningStar.push(stock.name); triggered = true }
+            if (current.isShootingStar(previous)) { shootingStar.push(stock.name); triggered = true }
+            if (current.isBullishSmash(previous)) { bullishSmash.push(stock.name); triggered = true }
+            if (current.isBearishSmash(previous)) { bearishSmash.push(stock.name); triggered = true }
+
+            if (!triggered)
+                continue
+
+            const grid = 'weekly' in args ? 'year': 'month'
+            const interval = 'weekly' in args ? '1 week' : '1 day'
+
+            const image = stockChart(stock.name, hist.slice(-110), lastDate, lastPrice, priceChange, grid, interval)
+            if (image) {
+                fs.mkdirSync('./images/', { recursive: true })
+                fs.writeFileSync(`./images/${stock.name}.png`, image)
             }
         } catch (e) {
             console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e.message })
         }
     }
-
-    return triggered
 }
 
 async function tweetAll() {
-    const bullishEngulfingTweet = await tweet(triggered.bullishEngulfing, 'OBJĘCIE HOSSY 📈')
-    const bearishEngulfingTweet = await tweet(triggered.bearishEngulfing, 'OBJĘCIE BESSY 📉')
-    const bullishGapTweet = await tweet(triggered.bullishGap, 'LUKA HOSSY 📈')
-    const bearishGapTweet = await tweet(triggered.bearishGap, 'LUKA BESSY 📉')
-    const morningStarTweet = await tweet(triggered.morningStar, 'GWIAZDA PORANNA 📈')
-    const shootingStarTweet = await tweet(triggered.shootingStar, 'SPADAJĄCA GWIAZDA 📉')
-    const bullishSmashTweet = await tweet(triggered.bullishSmash, 'FORMACJA SMASH KUPNA 📈')
-    const bearishSmashTweet = await tweet(triggered.bearishSmash, 'FORMACJA SMASH SPRZEDAŻY 📉')
+    const bullishEngulfingTweet = await tweet(bullishEngulfing, 'OBJĘCIE HOSSY 📈')
+    const bearishEngulfingTweet = await tweet(bearishEngulfing, 'OBJĘCIE BESSY 📉')
+    const bullishGapTweet = await tweet(bullishGap, 'LUKA HOSSY 📈')
+    const bearishGapTweet = await tweet(bearishGap, 'LUKA BESSY 📉')
+    const morningStarTweet = await tweet(morningStar, 'GWIAZDA PORANNA 📈')
+    const shootingStarTweet = await tweet(shootingStar, 'SPADAJĄCA GWIAZDA 📉')
+    const bullishSmashTweet = await tweet(bullishSmash, 'FORMACJA SMASH KUPNA 📈')
+    const bearishSmashTweet = await tweet(bearishSmash, 'FORMACJA SMASH SPRZEDAŻY 📉')
 
     let tweets = []
     if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
@@ -98,10 +122,10 @@ async function tweet(stockNames: string[], description: string) {
     if (stockNames.length === 0)
         return
 
-    const text = `#AlertyGiełdowe z #GPW - ${description}\n\n` +
+    const text = `#GPWTweets ${'weekly' in args ? '#Weekly' : '#Daily'} - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
         `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
-        'Podziel się: ❤️ lub 🔁'
+        '👉 ❤️ 🔁 👈'
 
     console.log('Tweet', { text: text })
 
