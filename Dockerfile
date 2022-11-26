@@ -40,7 +40,7 @@ ENV TZ Europe/Warsaw
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apk add --update --repository http://dl-3.alpinelinux.org/alpine/edge/testing \
-    libmount ttf-dejavu fontconfig
+    libmount ttf-dejavu ttf-opensans fontconfig
 
 COPY package.json .
 COPY --from=build /app/node_modules /app/node_modules
