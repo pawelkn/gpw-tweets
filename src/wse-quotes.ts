@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as https from 'https'
 import * as unzipper from 'unzipper'
 import * as path from 'path'
+import * as moment from 'moment'
 
 const etl = require('etl')
 
@@ -60,15 +61,13 @@ export default class WSEQuotes {
 
         case 'W':
             let candlesticks: Candlestick[] = []
-            let lastYear: number = NaN
-            let lastWeek: number = NaN
+            let lastWeekStart: string | undefined
 
-            for (const d of data) {
-                const day = new Date(Date.UTC(+d.date.substring(0, 4), +d.date.substring(4, 6) - 1, +d.date.substring(6, 8)))
-                const yearStart = new Date(Date.UTC(day.getUTCFullYear(), 0, 1))
-                const week = Math.ceil((((day.getTime() - yearStart.getTime()) / 86400000) + yearStart.getDay() + 1) / 7)
+            for (let d of data) {
+                const date = moment.utc(d.date, 'YYYYMMDD')
+                const weekStart = date.startOf('isoWeek').format('YYYYMMDD')
 
-                if ((lastWeek !== week) && (isNaN(lastYear) || isNaN(lastWeek) || (yearStart.getDay() === 1) || (lastYear === day.getUTCFullYear()))) {
+                if (!lastWeekStart || (lastWeekStart != weekStart)) {
                     candlesticks.push(d)
                 }
                 else {
@@ -80,8 +79,7 @@ export default class WSEQuotes {
                     last.volume += d.volume
                 }
 
-                lastYear = day.getUTCFullYear()
-                lastWeek = week
+                lastWeekStart = weekStart
             }
             return candlesticks
 
