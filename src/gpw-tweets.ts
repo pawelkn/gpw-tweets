@@ -1,6 +1,8 @@
 const args = require('args-parser')(process.argv)
 
 import * as fs from 'fs'
+import * as moment from 'moment-timezone'
+
 import TwitterApi from 'twitter-api-v2'
 import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
@@ -34,8 +36,9 @@ wseQuotes.update()
         .then(() => tweetAll()))
 
 async function scan() {
-    const zeroPad = (num: number, places=2) => String(num).padStart(places, '0')
-    const today = `${new Date().getFullYear()}${zeroPad(new Date().getMonth() + 1)}${zeroPad(new Date().getDate())}`
+    const weekStartOf = (date: string) => moment.utc(date, 'YYYYMMDD').startOf('isoWeek').format('YYYYMMDD')
+    const today = moment.utc().format('YYYYMMDD')
+    const weekStart = weekStartOf(today)
 
     for (const stock of polishStocks) {
         try {
@@ -44,12 +47,10 @@ async function scan() {
                 continue
 
             const last = hist[hist.length - 1]
-            const lastDate = `${+last.date.substring(0, 4)}-${+last.date.substring(4, 6) - 1}-${+last.date.substring(6, 8)}`
-            const lastPrice = last.close
-            const priceChange = (lastPrice / hist[hist.length - 2].close - 1) * 100
+            const priceChange = (last.close / hist[hist.length - 2].close - 1) * 100
 
-            if ((!('no-date-check' in args)) && (today !== last.date)) {
-                console.warn('Date of last candlestick differs with a current date. Skipping', { name: stock.name, last: last.date, current: today })
+            if (!('no-date-check' in args) && ('weekly' in args ? weekStart !== weekStartOf(last.date) : today !== last.date)) {
+                console.warn('Day/Week of last candlestick differs with a current one. Skipping', { name: stock.name, last: last.date, current: today })
                 console.info('If you want to ignore this check, pass a --no-date-check argument in command line')
                 continue
             }
@@ -80,10 +81,14 @@ async function scan() {
             if (!triggered)
                 continue
 
+            const description = stock.name
+            const data = hist.slice(-110)
+            const date = moment.tz(last.date, 'YYYYMMDD', 'Europe/Warsaw').set('hour', 17).format('YYYY-MM-DD HH:mm:ss z')
+            const price = last.close
             const grid = 'weekly' in args ? 'year': 'month'
             const interval = 'weekly' in args ? '1 week' : '1 day'
 
-            const image = stockChart(stock.name, hist.slice(-110), lastDate, lastPrice, priceChange, grid, interval)
+            const image = stockChart(description, data, date, price, priceChange, grid, interval)
             if (image) {
                 fs.mkdirSync('./images/', { recursive: true })
                 fs.writeFileSync(`./images/${stock.name}.png`, image)
