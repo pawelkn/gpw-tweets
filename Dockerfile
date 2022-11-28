@@ -51,7 +51,7 @@ RUN npm prune --production
 COPY polish-stocks.json ./
 
 RUN echo "01 19 * * 1-5 cd /app; node build/gpw-tweets.js > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root && \
-    echo "01 10 * * 6 cd /app; node build/gpw-tweets.js --weekly > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
+    echo "01 19 * * 6 cd /app; node build/gpw-tweets.js --weekly > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
 
 VOLUME /app/mstall
 VOLUME /app/images
