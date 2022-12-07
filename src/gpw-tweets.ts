@@ -29,6 +29,8 @@ const morningStar: string[] = []
 const shootingStar: string[] = []
 const bearishSmash: string[] = []
 const bullishSmash: string[] = []
+const piercing: string[] = []
+const darkCloudCover: string[] = []
 
 const wseQuotes = new WSEQuotes()
 wseQuotes.update()
@@ -77,6 +79,8 @@ async function scan() {
             if (current.isShootingStar(previous)) { shootingStar.push(stock.name); triggered = true }
             if (current.isBullishSmash(previous)) { bullishSmash.push(stock.name); triggered = true }
             if (current.isBearishSmash(previous)) { bearishSmash.push(stock.name); triggered = true }
+            if (current.isPiercing(previous)) { piercing.push(stock.name); triggered = true }
+            if (current.isDarkCloudCover(previous)) { darkCloudCover.push(stock.name); triggered = true }
 
             if (!triggered)
                 continue
@@ -108,6 +112,8 @@ async function tweetAll() {
     const shootingStarTweet = await tweet(shootingStar, 'SPADAJĄCA GWIAZDA 📉')
     const bullishSmashTweet = await tweet(bullishSmash, 'FORMACJA SMASH KUPNA 📈')
     const bearishSmashTweet = await tweet(bearishSmash, 'FORMACJA SMASH SPRZEDAŻY 📉')
+    const piercingTweet = await tweet(piercing, 'FORMACJA PRZENIKANIA 📈')
+    const darkCloudCoverTweet = await tweet(darkCloudCover, 'ZASŁONA CIEMNEJ CHMURY 📉')
 
     let tweets = []
     if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
@@ -118,6 +124,8 @@ async function tweetAll() {
     if(shootingStarTweet) tweets.push(shootingStarTweet)
     if(bullishSmashTweet) tweets.push(bullishSmashTweet)
     if(bearishSmashTweet) tweets.push(bearishSmashTweet)
+    if(piercingTweet) tweets.push(piercingTweet)
+    if(darkCloudCoverTweet) tweets.push(darkCloudCoverTweet)
 
     if(tweets.length !== 0)
         twitterApiRW.v2.tweetThread(tweets)

@@ -209,4 +209,80 @@ describe('candlestick', () => {
             assert.equal(true, curr.isBearishSmash(prev))
         })
     })
+
+    describe('#isPiercing()', () => {
+        it('should return false when current candle is not bullish', () => {
+            const prev = new Candlestick({ open: 8, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 3, high: 2, low: 2, close: 2 })
+            assert.equal(false, curr.isPiercing(prev))
+        })
+
+        it('should return false when previous candle is not bearish', () => {
+            const prev = new Candlestick({ open: 3, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 7 })
+            assert.equal(false, curr.isPiercing(prev))
+        })
+
+        it('should return false when current candle open is higher than previous low', () => {
+            const prev = new Candlestick({ open: 8, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 4, high: 8, low: 3, close: 7 })
+            assert.equal(false, curr.isPiercing(prev))
+        })
+
+        it('should return false when current candle close is bellow previous body half', () => {
+            const prev = new Candlestick({ open: 8, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 5 })
+            assert.equal(false, curr.isPiercing(prev))
+        })
+
+        it('should return false when current candle close is above previous open', () => {
+            const prev = new Candlestick({ open: 8, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 8.5 })
+            assert.equal(false, curr.isPiercing(prev))
+        })
+
+        it('should return true when current candle is piercing', () => {
+            const prev = new Candlestick({ open: 8, high: 8.5, low: 3.5, close: 4 })
+            const curr = new Candlestick({ open: 3, high: 8, low: 3, close: 7 })
+            assert.equal(true, curr.isPiercing(prev))
+        })
+    })
+
+    describe('#isDarkCloudCover()', () => {
+        it('should return false when current candle is not bearish', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 6 })
+            const curr = new Candlestick({ open: 8, high: 8.5, low: 2.5, close: 8.5 })
+            assert.equal(false, curr.isDarkCloudCover(prev))
+        })
+
+        it('should return false when previous candle is not bullish', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 1.5 })
+            const curr = new Candlestick({ open: 8, high: 8.5, low: 2.5, close: 3 })
+            assert.equal(false, curr.isDarkCloudCover(prev))
+        })
+
+        it('should return false when current candle open is lower than previous high', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 6 })
+            const curr = new Candlestick({ open: 6, high: 8.5, low: 2.5, close: 3 })
+            assert.equal(false, curr.isDarkCloudCover(prev))
+        })
+
+        it('should return false when current candle close is above previous body half', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 6 })
+            const curr = new Candlestick({ open: 8, high: 8.5, low: 2.5, close: 5 })
+            assert.equal(false, curr.isDarkCloudCover(prev))
+        })
+
+        it('should return false when current candle close is below previous open', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 6 })
+            const curr = new Candlestick({ open: 8, high: 8.5, low: 2.5, close: 1.5 })
+            assert.equal(false, curr.isDarkCloudCover(prev))
+        })
+
+        it('should return true when current candle is dark cloud cover', () => {
+            const prev = new Candlestick({ open: 2, high: 6.5, low: 1.5, close: 6 })
+            const curr = new Candlestick({ open: 8, high: 8.5, low: 2.5, close: 3 })
+            assert.equal(true, curr.isDarkCloudCover(prev))
+        })
+    })
 })
