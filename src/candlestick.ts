@@ -24,8 +24,8 @@ export default class Candlestick {
     public wickLen() { return this.high - max(this.open, this.close) }
     public tailLen() { return min(this.open, this.close) - this.low }
 
-    public isHammer(ratio = 2) { return this.tailLen() > (this.bodyLen() * ratio) && this.wickLen() < this.bodyLen() }
-    public isInvertedHammer(ratio = 2) { return this.wickLen() > (this.bodyLen() * ratio) && this.tailLen() < this.bodyLen() }
+    public isHammer(ratio = 2) { return this.tailLen() > ((this.bodyLen() + this.wickLen()) * ratio) }
+    public isInvertedHammer(ratio = 2) { return this.wickLen() > ((this.bodyLen() + this.tailLen()) * ratio) }
     public isBullishHammer() { return this.isBullish() && this.isHammer() }
     public isBearishHammer() { return this.isBearish() && this.isHammer() }
     public isBullishInvertedHammer() { return this.isBullish() && this.isInvertedHammer() }
