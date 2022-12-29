@@ -137,7 +137,6 @@ async function tweet(stockNames: string[], description: string) {
 
     const text = `#GPWTweets ${'weekly' in args ? '#Weekly' : '#Daily'} - ${description}\n\n` +
         `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
-        `https://stockaggregator.com?tickers=${stockNames.join("%20")}\n\n` +
         '👉 ❤️ 🔁 👈'
 
     console.log('Tweet', { text: text })
