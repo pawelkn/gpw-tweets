@@ -1,8 +1,9 @@
 build
 idea
-mstall
-images
 node_modules
+
+images/*.png
+mstall/*.mst
 
 twitter-credentials.json
 deploy.sh
