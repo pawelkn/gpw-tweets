@@ -62,7 +62,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
     context.font = 'bold 30px "Open Sans"'
     context.textAlign = "left"
     context.fillText(description, HEADER.left + HEADER.padding, HEADER.top + HEADER.line)
-    context.fillStyle = (priceChange !== 0 ? (priceChange > 0 ? "green" : "red") : "grey")
+    context.fillStyle = (priceChange !== 0 ? (priceChange > 0 ? "#080" : "#d00") : "#808080")
     context.font = '28px "DejaVu Sans"'
     context.textAlign = "center"
     context.fillText(`${priceChange.toFixed(2)}% ${priceChange != 0 ? (priceChange > 0 ? "\u25B2" : "\u25BC") : "\u25CF"}`, HEADER.left + HEADER.width/2, HEADER.top + HEADER.line)
@@ -262,7 +262,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
         let upcandle = e.close > e.open
 
         context.lineWidth = 1
-        context.strokeStyle = highlight ? (upcandle ? "lime" : "red") : "#000"
+        context.strokeStyle = highlight ? (upcandle ? "#0a0" : "#f00") : "#000"
         context.fillStyle = upcandle ? "white" : "#08c"
         context.fillRect(left, top, width, height)
 
