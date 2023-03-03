@@ -178,7 +178,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
                 x2 = round(CHART.padding.left + verticalSpace * i) + 0.5
 
                 context.lineWidth = 1
-                context.strokeStyle = '#ddd'
+                context.strokeStyle = '#eee'
                 context.beginPath()
                 context.moveTo(x2, CHART.padding.top - 10.0)
                 context.lineTo(x2, CHART.padding.bottom + 10.0)
@@ -207,7 +207,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
         const text = reverseLogScale(y) ? Number(reverseLogScale(y)).toFixed(reverseLogScale(y) < 1000 ? 2 : 0) : ""
 
         context.lineWidth = 1
-        context.strokeStyle = '#ddd'
+        context.strokeStyle = '#eee'
         context.beginPath()
         context.moveTo(CHART.padding.left, y)
         context.lineTo(CHART.padding.right + 5, y)
@@ -237,7 +237,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
         let volBottom = linScale(0) + strokeWidth
         let volHeight = volBottom - volTop
 
-        context.fillStyle = "#eee"
+        context.fillStyle = "#ddd"
         context.fillRect(volLeft, volTop, volWidth, volHeight)
     }
 
