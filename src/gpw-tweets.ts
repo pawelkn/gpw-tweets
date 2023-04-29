@@ -21,16 +21,18 @@ const twitterCredentials: TwitterCredentials = JSON.parse(fs.readFileSync(twitte
 const twitterApi = new TwitterApi({ ...twitterCredentials })
 const twitterApiRW = twitterApi.readWrite
 
-const bullishEngulfing: string[] = []
-const bearishEngulfing: string[] = []
-const bullishGap: string[] = []
-const bearishGap: string[] = []
-const morningStar: string[] = []
-const shootingStar: string[] = []
-const bearishSmash: string[] = []
-const bullishSmash: string[] = []
-const piercing: string[] = []
-const darkCloudCover: string[] = []
+type Triggered = { name: string, turnover: number };
+
+const bullishEngulfing: Triggered[] = []
+const bearishEngulfing: Triggered[] = []
+const bullishGap: Triggered[] = []
+const bearishGap: Triggered[] = []
+const morningStar: Triggered[] = []
+const shootingStar: Triggered[] = []
+const bearishSmash: Triggered[] = []
+const bullishSmash: Triggered[] = []
+const piercing: Triggered[] = []
+const darkCloudCover: Triggered[] = []
 
 const wseQuotes = new WSEQuotes()
 wseQuotes.update()
@@ -67,20 +69,20 @@ async function scan() {
             const currentAvg = (current.open + current.high + current.low + current.close) / 4
             const currentTurnover = currentAvg * current.volume
 
-            if ((current.volume / previous.volume < volumeRise) || (currentTurnover < minTurnover) || (current.close < minPrice))
+            if ((current.volume / previous.volume < +volumeRise) || (+currentTurnover < +minTurnover) || (current.close < +minPrice))
                 continue
 
             let triggered = false
-            if (current.isBullishEngulfing(previous)) { bullishEngulfing.push(stock.name); triggered = true }
-            if (current.isBearishEngulfing(previous)) { bearishEngulfing.push(stock.name); triggered = true }
-            if (current.isBullishGap(previous)) { bullishGap.push(stock.name); triggered = true }
-            if (current.isBearishGap(previous)) { bearishGap.push(stock.name); triggered = true }
-            if (current.isMorningStar(previous)) { morningStar.push(stock.name); triggered = true }
-            if (current.isShootingStar(previous)) { shootingStar.push(stock.name); triggered = true }
-            if (current.isBullishSmash(previous)) { bullishSmash.push(stock.name); triggered = true }
-            if (current.isBearishSmash(previous)) { bearishSmash.push(stock.name); triggered = true }
-            if (current.isPiercing(previous)) { piercing.push(stock.name); triggered = true }
-            if (current.isDarkCloudCover(previous)) { darkCloudCover.push(stock.name); triggered = true }
+            if (current.isBullishEngulfing(previous)) { bullishEngulfing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBearishEngulfing(previous)) { bearishEngulfing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBullishGap(previous)) { bullishGap.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBearishGap(previous)) { bearishGap.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isMorningStar(previous)) { morningStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isShootingStar(previous)) { shootingStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBullishSmash(previous)) { bullishSmash.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBearishSmash(previous)) { bearishSmash.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isPiercing(previous)) { piercing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isDarkCloudCover(previous)) { darkCloudCover.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
 
             if (!triggered)
                 continue
@@ -104,16 +106,16 @@ async function scan() {
 }
 
 async function tweetAll() {
-    const bullishEngulfingTweet = await tweet(bullishEngulfing, 'OBJĘCIE HOSSY 📈')
-    const bearishEngulfingTweet = await tweet(bearishEngulfing, 'OBJĘCIE BESSY 📉')
-    const bullishGapTweet = await tweet(bullishGap, 'LUKA HOSSY 📈')
-    const bearishGapTweet = await tweet(bearishGap, 'LUKA BESSY 📉')
-    const morningStarTweet = await tweet(morningStar, 'GWIAZDA PORANNA 📈')
-    const shootingStarTweet = await tweet(shootingStar, 'SPADAJĄCA GWIAZDA 📉')
-    const bullishSmashTweet = await tweet(bullishSmash, 'FORMACJA SMASH KUPNA 📈')
-    const bearishSmashTweet = await tweet(bearishSmash, 'FORMACJA SMASH SPRZEDAŻY 📉')
-    const piercingTweet = await tweet(piercing, 'FORMACJA PRZENIKANIA 📈')
-    const darkCloudCoverTweet = await tweet(darkCloudCover, 'ZASŁONA CIEMNEJ CHMURY 📉')
+    const bullishEngulfingTweet = await tweet(bullishEngulfing, 'Bullish Engulfing 📈')
+    const bearishEngulfingTweet = await tweet(bearishEngulfing, 'Bearish Engulfing 📉')
+    const bullishGapTweet = await tweet(bullishGap, 'Bullish Gap 📈')
+    const bearishGapTweet = await tweet(bearishGap, 'Bearish Gap 📉')
+    const morningStarTweet = await tweet(morningStar, 'Morning Star 📈')
+    const shootingStarTweet = await tweet(shootingStar, 'Shooting Star 📉')
+    const bullishSmashTweet = await tweet(bullishSmash, 'Bullish Smash 📈')
+    const bearishSmashTweet = await tweet(bearishSmash, 'Bearish Smash 📉')
+    const piercingTweet = await tweet(piercing, 'Piercing Pattern 📈')
+    const darkCloudCoverTweet = await tweet(darkCloudCover, 'Dark Cloud Cover 📉')
 
     let tweets = []
     if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
@@ -131,13 +133,23 @@ async function tweetAll() {
         twitterApiRW.v2.tweetThread(tweets)
 }
 
-async function tweet(stockNames: string[], description: string) {
-    if (stockNames.length === 0)
+async function tweet(triggered: Triggered[], description: string) {
+    if (triggered.length === 0)
         return
 
-    const text = `#GPWTweets ${'weekly' in args ? '#Weekly' : '#Daily'} - ${description}\n\n` +
-        `${stockNames.map(name => `#${name}`).join(" ")}\n\n` +
-        '👉 ❤️ 🔁 👈'
+    triggered.sort((a, b) => b.turnover - a.turnover)
+
+    let text: string
+    while (true) {
+        text = `#GPWTweets ${'weekly' in args ? '#Weekly' : '#Daily'} - ${description}\n\n` +
+            triggered.map(t => t.name).join(" ") +
+            `\n\n👉 ❤️ 🔁 👈`
+
+        if (text.length > 160)
+            triggered.pop()
+        else
+            break
+    }
 
     console.log('Tweet', { text: text })
 
@@ -146,7 +158,7 @@ async function tweet(stockNames: string[], description: string) {
         return
     }
 
-    const firstFourStockNames = stockNames.slice(0, 4)
-    const mediaIds = await Promise.all(firstFourStockNames.map(stockName => twitterApiRW.v1.uploadMedia(`./images/${stockName}.png`)))
+    const firstFour = triggered.slice(0, 4)
+    const mediaIds = await Promise.all(firstFour.map(t => twitterApiRW.v1.uploadMedia(`./images/${t.name}.png`)))
     return { text: text, media: { media_ids: mediaIds } }
 }
