@@ -2,9 +2,9 @@
 
 [![Test](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml/badge.svg)](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml)
 
-GPW Tweets is a scanner of GPW (Warsaw Stock Exchange) securities. Every day checks each company quotations, searching for volume increase and candlestick pattern matches. Scan results are published on Twitter.
+GPW Tweets scans securities listed on the Warsaw Stock Exchange (GPW) on a daily and weekly basis, in search of increase in trading volume and matching candlestick patterns. The scan results are then posted on Twitter for public access.
 
-<p align="center"><img src="screenshot.png"/></p>
+<p align="center"><img src="tweet-example.png"/></p>
 
 ## Configuration
 
