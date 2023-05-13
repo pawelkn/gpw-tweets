@@ -34,16 +34,15 @@ const bullishSmash: Triggered[] = []
 const piercing: Triggered[] = []
 const darkCloudCover: Triggered[] = []
 
-const wseQuotes = new WSEQuotes()
-wseQuotes.update()
-    .then(() => scan()
-        .then(() => tweetAll()))
-
 async function scan() {
     const weekStartOf = (date: string) => moment.utc(date, 'YYYYMMDD').startOf('isoWeek').format('YYYYMMDD')
     const today = moment.utc().format('YYYYMMDD')
     const weekStart = weekStartOf(today)
 
+    const wseQuotes = new WSEQuotes()
+    wseQuotes.update()
+
+    let success = false
     for (const stock of polishStocks) {
         try {
             let hist = await wseQuotes.getHistorical(stock.name)
@@ -99,10 +98,14 @@ async function scan() {
                 fs.mkdirSync('./images/', { recursive: true })
                 fs.writeFileSync(`./images/${stock.name}.png`, image)
             }
+
+            success = true
         } catch (e) {
             console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e.message })
         }
     }
+
+    return success
 }
 
 async function tweetAll() {
@@ -162,3 +165,24 @@ async function tweet(triggered: Triggered[], description: string) {
     const mediaIds = await Promise.all(firstFour.map(t => twitterApiRW.v1.uploadMedia(`./images/${t.name}.png`)))
     return { text: text, media: { media_ids: mediaIds } }
 }
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function main() {
+    let scanExecutions = 0
+    while (!await scan()) {
+        if (scanExecutions++ > 8) {
+            console.warn('Scan failed. Give up')
+            return
+        }
+
+        console.warn('Scan failed. Postpone')
+        await sleep(30*60*1000)
+    }
+
+    await tweetAll()
+}
+
+main()

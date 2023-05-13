@@ -1,6 +1,6 @@
 {
   "name": "gpw-tweets",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "GPW Tweets is a scanner of GPW (Warsaw Stock Exchange) securities. Every day checks each company quotations, searching for volume increase and candlestick pattern matches. Scan results are published on Twitter.",
   "prepare": "npm run build",
   "main": "build/gpw-tweets.js",
