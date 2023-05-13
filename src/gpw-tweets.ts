@@ -40,7 +40,7 @@ async function scan() {
     const weekStart = weekStartOf(today)
 
     const wseQuotes = new WSEQuotes()
-    wseQuotes.update()
+    await wseQuotes.update()
 
     let success = false
     for (const stock of polishStocks) {
