@@ -43,8 +43,8 @@ export default class Candlestick {
     public isBearishHarami(previous: Candlestick) { return previous.isBullish() && this.isBullish() && this.isEngulfed(previous) }
     public isBullishKicker(previous: Candlestick) { return previous.isBearish() && this.isBullish() && this.hasGapUp(previous) && !(this.isHammer() || this.isInvertedHammer()) }
     public isBearishKicker(previous: Candlestick) { return previous.isBullish() && this.isBearish() && this.hasGapDown(previous) && !(this.isHammer() || this.isInvertedHammer()) }
-    public isBullishGap(previous: Candlestick) { return this.isBullish() && this.hasGapUp(previous) }
-    public isBearishGap(previous: Candlestick) { return this.isBearish() && this.hasGapDown(previous) }
+    public isBullishGap(previous: Candlestick) { return this.isBullish() && (this.hasGapUp(previous) || this.hasGapDown(previous)) }
+    public isBearishGap(previous: Candlestick) { return this.isBearish() && (this.hasGapUp(previous) || this.hasGapDown(previous)) }
     public isBullishSmash(previous: Candlestick) { return previous.isInvertedHammer() && this.isBullish() && (this.close > previous.high) }
     public isBearishSmash(previous: Candlestick) { return previous.isHammer() && this.isBearish() && (this.close < previous.low) }
     public isPiercing(previous: Candlestick) { return (this.open < previous.low) && (this.close > previous.bodyHalf() ) && (this.close < previous.open) }
