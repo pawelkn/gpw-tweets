@@ -6,4 +6,3 @@ images/*.png
 mstall/*.mst
 
 twitter-credentials.json
-deploy.sh
