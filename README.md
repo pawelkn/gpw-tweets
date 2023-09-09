@@ -2,7 +2,7 @@
 
 [![Test](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml/badge.svg)](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml)
 
-GPW Tweets scans securities listed on the Warsaw Stock Exchange (GPW) on a daily and weekly basis, in search of increase in trading volume and matching candlestick patterns. The scan results are then posted on Twitter for public access.
+GPW Tweets scans securities listed on the Warsaw Stock Exchange (GPW) on a daily and weekly basis, in search of matching candlestick patterns. The scan results are then posted on Twitter for public access.
 
 <p align="center"><img src="tweet-example.png"/></p>
 
@@ -31,13 +31,12 @@ Example:
 export GPW_TWEETS_TWITTER_CREDENTIALS_FILE=/run/secrets/twitter-credentials
 ```
 
-Minium volume change, minimum price and minimum daily turnover of scanned securities can be adjusted by using environment variables
+Minimum price and minimum daily turnover of scanned securities can be adjusted by using environment variables
 
 Example (and default values):
 
 ```sh
-export GPW_TWEETS_VOLUME_RISE=2.0
-export GPW_TWEETS_MIN_TURNOVER=50_000
+export GPW_TWEETS_MIN_TURNOVER=100_000
 export GPW_TWEETS_MIN_PRICE=2.0
 ```
 

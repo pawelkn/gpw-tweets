@@ -8,8 +8,7 @@ import WSEQuotes from './wse-quotes'
 import stockChart from './stock-chart'
 
 const twitterCredentialsFile = process.env.GPW_TWEETS_TWITTER_CREDENTIALS_FILE || 'twitter-credentials.json'
-const volumeRise = process.env.GPW_TWEETS_VOLUME_RISE || 2.0
-const minTurnover = process.env.GPW_TWEETS_MIN_TURNOVER || 50_000
+const minTurnover = process.env.GPW_TWEETS_MIN_TURNOVER || 100_000
 const minPrice = process.env.GPW_TWEETS_MIN_PRICE || 2.0
 
 type PolishStock = { symbol: string, ISIN: string, name: string, quotationTable: string }
@@ -29,10 +28,10 @@ const bullishGap: Triggered[] = []
 const bearishGap: Triggered[] = []
 const morningStar: Triggered[] = []
 const shootingStar: Triggered[] = []
-const bearishSmash: Triggered[] = []
-const bullishSmash: Triggered[] = []
 const piercing: Triggered[] = []
 const darkCloudCover: Triggered[] = []
+const bullishInsideBar: Triggered[] = []
+const bearishInsideBar: Triggered[] = []
 
 async function scan() {
     const weekStartOf = (date: string) => moment.utc(date, 'YYYYMMDD').startOf('isoWeek').format('YYYYMMDD')
@@ -68,7 +67,7 @@ async function scan() {
             const currentAvg = (current.open + current.high + current.low + current.close) / 4
             const currentTurnover = currentAvg * current.volume
 
-            if ((current.volume / previous.volume < +volumeRise) || (+currentTurnover < +minTurnover) || (current.close < +minPrice))
+            if ((+currentTurnover < +minTurnover) || (current.close < +minPrice))
                 continue
 
             let triggered = false
@@ -78,10 +77,10 @@ async function scan() {
             if (current.isBearishGap(previous)) { bearishGap.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isMorningStar(previous)) { morningStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isShootingStar(previous)) { shootingStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isBullishSmash(previous)) { bullishSmash.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isBearishSmash(previous)) { bearishSmash.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isPiercing(previous)) { piercing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isDarkCloudCover(previous)) { darkCloudCover.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBullishInsideBar(previous)) { bullishInsideBar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
+            if (current.isBearishInsideBar(previous)) { bearishInsideBar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
 
             if (!triggered)
                 continue
@@ -115,10 +114,10 @@ async function tweetAll() {
     const bearishGapTweet = await tweet(bearishGap, 'Bearish Gap 📉')
     const morningStarTweet = await tweet(morningStar, 'Morning Star 📈')
     const shootingStarTweet = await tweet(shootingStar, 'Shooting Star 📉')
-    const bullishSmashTweet = await tweet(bullishSmash, 'Bullish Smash 📈')
-    const bearishSmashTweet = await tweet(bearishSmash, 'Bearish Smash 📉')
     const piercingTweet = await tweet(piercing, 'Piercing Pattern 📈')
     const darkCloudCoverTweet = await tweet(darkCloudCover, 'Dark Cloud Cover 📉')
+    const bullishInsideBarTweet = await tweet(bullishInsideBar, 'Bullish Inside Bar 📈')
+    const bearishInsideBarTweet = await tweet(bearishInsideBar, 'Bearish Inside Bar 📉')
 
     let tweets = []
     if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
@@ -127,10 +126,10 @@ async function tweetAll() {
     if(bearishGapTweet) tweets.push(bearishGapTweet)
     if(morningStarTweet) tweets.push(morningStarTweet)
     if(shootingStarTweet) tweets.push(shootingStarTweet)
-    if(bullishSmashTweet) tweets.push(bullishSmashTweet)
-    if(bearishSmashTweet) tweets.push(bearishSmashTweet)
     if(piercingTweet) tweets.push(piercingTweet)
     if(darkCloudCoverTweet) tweets.push(darkCloudCoverTweet)
+    if(bullishInsideBarTweet) tweets.push(bullishInsideBarTweet)
+    if(bearishInsideBarTweet) tweets.push(bearishInsideBarTweet)
 
     if(tweets.length !== 0)
         twitterApiRW.v2.tweetThread(tweets)
@@ -145,8 +144,7 @@ async function tweet(triggered: Triggered[], description: string) {
     let text: string
     while (true) {
         text = `#GPWTweets ${'weekly' in args ? '#Weekly' : '#Daily'} - ${description}\n\n` +
-            triggered.map(t => t.name).join(" ") +
-            `\n\n👉 ❤️ 🔁 👈`
+            triggered.map(t => t.name).join(" ")
 
         if (text.length > 160)
             triggered.pop()

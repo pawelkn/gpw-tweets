@@ -1,4 +1,4 @@
-import { max, min, abs } from 'mathjs'
+import { abs } from 'mathjs'
 
 export default class Candlestick {
     public date: string
@@ -20,37 +20,43 @@ export default class Candlestick {
     public isBullish() { return this.open < this.close }
     public isBearish() { return this.open > this.close }
 
+    public bodyEnds() { return this.open <= this.close ? { bottom: this.open, top: this.close } : { bottom: this.close, top: this.open } }
+    public bodyHalf() { return (this.open + this.close) / 2 }
     public bodyLen() { return abs(this.open - this.close) }
-    public wickLen() { return this.high - max(this.open, this.close) }
-    public tailLen() { return min(this.open, this.close) - this.low }
+    public wickLen() { return this.high - this.bodyEnds().top }
+    public tailLen() { return this.bodyEnds().bottom - this.low }
 
-    public isHammer(ratio = 2) { return this.tailLen() > ((this.bodyLen() + this.wickLen()) * ratio) }
-    public isInvertedHammer(ratio = 2) { return this.wickLen() > ((this.bodyLen() + this.tailLen()) * ratio) }
+    public isHammer() { return this.tailLen() > ((this.bodyLen() + this.wickLen()) * 2) }
+    public isInvertedHammer() { return this.wickLen() > ((this.bodyLen() + this.tailLen()) * 2) }
     public isBullishHammer() { return this.isBullish() && this.isHammer() }
     public isBearishHammer() { return this.isBearish() && this.isHammer() }
     public isBullishInvertedHammer() { return this.isBullish() && this.isInvertedHammer() }
     public isBearishInvertedHammer() { return this.isBearish() && this.isInvertedHammer() }
 
+    public isLong() { return (this.bodyLen() > ((this.wickLen() + this.tailLen()) * 2)) && (this.bodyEnds().top > this.bodyEnds().bottom * 1.03) }
+    public isLongBullish() { return this.isBullish() && this.isLong() }
+    public isLongBearish() { return this.isBearish() && this.isLong() }
+
     public hasGapUp(previous: Candlestick) { return previous.high < this.low }
     public hasGapDown(previous: Candlestick) { return previous.low > this.high }
 
-    public isHangingMan(previous: Candlestick) { return previous.isBullish() && this.isBearishHammer() && this.hasGapUp(previous) }
+    public engulfs(c: Candlestick, ratio: number = 2) {
+        return (c.bodyEnds().top < this.bodyEnds().top) && (c.bodyEnds().bottom > this.bodyEnds().bottom) && (c.bodyLen() * ratio < this.bodyLen())
+    }
+
     public isShootingStar(previous: Candlestick) { return previous.isBullish() && this.isInvertedHammer() && this.hasGapUp(previous) }
     public isMorningStar(previous: Candlestick) { return previous.isBearish() && this.isHammer() && this.hasGapDown(previous) }
-    public isBullishEngulfing(previous: Candlestick) { return previous.isBearish() && this.isBullish() && this.isEngulfed(previous) }
-    public isBearishEngulfing(previous: Candlestick) { return previous.isBullish() && this.isBearish() && this.isEngulfed(previous) }
-    public isBullishHarami(previous: Candlestick) { return previous.isBullish() && this.isBullish() && this.isEngulfed(previous) }
-    public isBearishHarami(previous: Candlestick) { return previous.isBullish() && this.isBullish() && this.isEngulfed(previous) }
-    public isBullishKicker(previous: Candlestick) { return previous.isBearish() && this.isBullish() && this.hasGapUp(previous) && !(this.isHammer() || this.isInvertedHammer()) }
-    public isBearishKicker(previous: Candlestick) { return previous.isBullish() && this.isBearish() && this.hasGapDown(previous) && !(this.isHammer() || this.isInvertedHammer()) }
-    public isBullishGap(previous: Candlestick) { return this.isBullish() && (this.hasGapUp(previous) || this.hasGapDown(previous)) }
-    public isBearishGap(previous: Candlestick) { return this.isBearish() && (this.hasGapUp(previous) || this.hasGapDown(previous)) }
-    public isBullishSmash(previous: Candlestick) { return previous.isInvertedHammer() && this.isBullish() && (this.close > previous.high) }
-    public isBearishSmash(previous: Candlestick) { return previous.isHammer() && this.isBearish() && (this.close < previous.low) }
-    public isPiercing(previous: Candlestick) { return (this.open < previous.low) && (this.close > previous.bodyHalf() ) && (this.close < previous.open) }
-    public isDarkCloudCover(previous: Candlestick) { return (this.open > previous.high) && (this.close < previous.bodyHalf() ) && (this.close > previous.open) }
 
-    private bodyEnds() { return this.open <= this.close ? { bottom: this.open, top: this.close } : { bottom: this.close, top: this.open } }
-    private bodyHalf() { return (this.open + this.close) / 2 }
-    private isEngulfed(previous: Candlestick) { return previous.bodyEnds().top <= this.bodyEnds().top && previous.bodyEnds().bottom >= this.bodyEnds().bottom }
+    public isBullishEngulfing(previous: Candlestick) { return previous.isBearish() && this.isLongBullish() && this.engulfs(previous) }
+    public isBearishEngulfing(previous: Candlestick) { return previous.isBullish() && this.isLongBearish() && this.engulfs(previous) }
+
+    public isBullishGap(previous: Candlestick) { return this.isLongBullish() && this.hasGapUp(previous) }
+    public isBearishGap(previous: Candlestick) { return this.isLongBearish() && this.hasGapDown(previous) }
+
+    public isPiercing(previous: Candlestick) { return this.isLongBullish() && (this.open < previous.low) && (this.close > previous.bodyHalf() ) && (this.close < previous.open) }
+    public isDarkCloudCover(previous: Candlestick) { return this.isLongBearish() && (this.open > previous.high) && (this.close < previous.bodyHalf() ) && (this.close > previous.open) }
+
+    public isInsideBar(previous: Candlestick) { return (this.high < previous.high) && (this.low > previous.low) && previous.engulfs(this, 5) }
+    public isBullishInsideBar(previous: Candlestick) { return previous.isLongBearish() && this.isInsideBar(previous)  }
+    public isBearishInsideBar(previous: Candlestick) { return previous.isLongBullish() && this.isInsideBar(previous) }
 }
