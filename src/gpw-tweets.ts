@@ -108,31 +108,16 @@ async function scan() {
 }
 
 async function tweetAll() {
-    const bullishEngulfingTweet = await tweet(bullishEngulfing, 'Bullish Engulfing 📈')
-    const bearishEngulfingTweet = await tweet(bearishEngulfing, 'Bearish Engulfing 📉')
-    const bullishGapTweet = await tweet(bullishGap, 'Bullish Gap 📈')
-    const bearishGapTweet = await tweet(bearishGap, 'Bearish Gap 📉')
-    const morningStarTweet = await tweet(morningStar, 'Morning Star 📈')
-    const shootingStarTweet = await tweet(shootingStar, 'Shooting Star 📉')
-    const piercingTweet = await tweet(piercing, 'Piercing Pattern 📈')
-    const darkCloudCoverTweet = await tweet(darkCloudCover, 'Dark Cloud Cover 📉')
-    const bullishInsideBarTweet = await tweet(bullishInsideBar, 'Bullish Inside Bar 📈')
-    const bearishInsideBarTweet = await tweet(bearishInsideBar, 'Bearish Inside Bar 📉')
-
-    let tweets = []
-    if(bullishEngulfingTweet) tweets.push(bullishEngulfingTweet)
-    if(bearishEngulfingTweet) tweets.push(bearishEngulfingTweet)
-    if(bullishGapTweet) tweets.push(bullishGapTweet)
-    if(bearishGapTweet) tweets.push(bearishGapTweet)
-    if(morningStarTweet) tweets.push(morningStarTweet)
-    if(shootingStarTweet) tweets.push(shootingStarTweet)
-    if(piercingTweet) tweets.push(piercingTweet)
-    if(darkCloudCoverTweet) tweets.push(darkCloudCoverTweet)
-    if(bullishInsideBarTweet) tweets.push(bullishInsideBarTweet)
-    if(bearishInsideBarTweet) tweets.push(bearishInsideBarTweet)
-
-    if(tweets.length !== 0)
-        twitterApiRW.v2.tweetThread(tweets)
+    await tweet(bearishInsideBar, 'Bearish Inside Bar 📉')
+    await tweet(bullishInsideBar, 'Bullish Inside Bar 📈')
+    await tweet(darkCloudCover, 'Dark Cloud Cover 📉')
+    await tweet(piercing, 'Piercing Pattern 📈')
+    await tweet(shootingStar, 'Shooting Star 📉')
+    await tweet(morningStar, 'Morning Star 📈')
+    await tweet(bearishGap, 'Bearish Gap 📉')
+    await tweet(bullishGap, 'Bullish Gap 📈')
+    await tweet(bearishEngulfing, 'Bearish Engulfing 📉')
+    await tweet(bullishEngulfing, 'Bullish Engulfing 📈')
 }
 
 async function tweet(triggered: Triggered[], description: string) {
@@ -161,7 +146,7 @@ async function tweet(triggered: Triggered[], description: string) {
 
     const firstFour = triggered.slice(0, 4)
     const mediaIds = await Promise.all(firstFour.map(t => twitterApiRW.v1.uploadMedia(`./images/${t.name}.png`)))
-    return { text: text, media: { media_ids: mediaIds } }
+    twitterApiRW.v2.tweet(text, { media: { media_ids: mediaIds } })
 }
 
 function sleep(ms: number) {
