@@ -57,4 +57,8 @@ RUN echo "30 19 * * 1-5 cd /app; node build/gpw-tweets.js > /proc/1/fd/1 2> /pro
 VOLUME /app/mstall
 VOLUME /app/images
 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 CMD ["crond", "-f", "-d", "8"]
