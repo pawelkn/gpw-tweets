@@ -84,7 +84,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
     context.textAlign = "left"
     context.fillText(`Interval: ${interval}`, FOOTER.left + FOOTER.padding, FOOTER.top + FOOTER.line)
     context.textAlign = "center"
-    context.fillText("© Paweł Knioła", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
+    context.fillText("@GPWTweets", FOOTER.left + FOOTER.width/2, FOOTER.top + FOOTER.line)
     context.textAlign = "right"
     context.fillText(date, FOOTER.left + FOOTER.width - FOOTER.padding, FOOTER.top + FOOTER.line)
 

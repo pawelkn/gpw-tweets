@@ -2,13 +2,13 @@
 
 [![Test](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml/badge.svg)](https://github.com/pawelkn/gpw-tweets/actions/workflows/test.yml)
 
-GPW Tweets scans securities listed on the Warsaw Stock Exchange (GPW) on a daily and weekly basis, in search of matching candlestick patterns. The scan results are then posted on Twitter for public access.
+GPW Tweets scans securities listed on the Warsaw Stock Exchange (GPW) on a daily and weekly basis, in search of matching candlestick patterns. The scan results are then posted on X for public access.
 
 <p align="center"><img src="tweet-example.png"/></p>
 
 ## Configuration
 
-Twitter account configuration. To publish a tweet, you must create a twitter developer account on <https://developer.twitter.com/> and obtain a *Customer Key and Secret*. Then create a twitter application and obtain an *OAuth Access Token and Secret*.
+X account configuration. To publish a tweet, you must create a X developer account on <https://developer.twitter.com/> and obtain a *Customer Key and Secret*. Then create a X application and obtain an *OAuth Access Token and Secret*.
 
 Finally create a configuration file *twitter-credentials.json* and enter your sender account settings.
 
@@ -60,7 +60,7 @@ npm start
 Optional command line options:
 
 * *--weekly* - use a week interval
-* *--dry-run* - do not post anything on twitter, just dummy application run
+* *--dry-run* - do not post anything on X, just dummy application run
 * *--no-date-check* - do not verify securities last quotation date
 
 ## Docker
