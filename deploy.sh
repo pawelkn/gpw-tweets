@@ -6,6 +6,7 @@ if [ $# -eq 0 ]; then
 fi
 
 ssh $1 '
+docker image pull pawelkn/gpw-tweets:latest
 docker volume create mstall
 docker volume create images
 docker service rm gpw-tweets
