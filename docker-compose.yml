@@ -7,5 +7,4 @@ services:
     command: node build/gpw-tweets.js --dry-run --no-date-check
     volumes:
       - ${PWD}/twitter-credentials.json:/app/twitter-credentials.json
-      - ${PWD}/mstall:/app/mstall
       - ${PWD}/images:/app/images

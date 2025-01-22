@@ -1,13 +1,11 @@
-FROM node:17.9.0-alpine as build
+FROM node:22.13.0-alpine as build
 WORKDIR /app
 
-RUN apk add --no-cache sudo build-base g++ libpng libpng-dev jpeg-dev pango-dev cairo-dev giflib-dev python3
+RUN apk add --no-cache sudo build-base g++ libpng libpng-dev jpeg-dev pango-dev cairo-dev giflib-dev python3 ca-certificates
 
-RUN apk --no-cache add ca-certificates wget && \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk && \
-    apk add glibc-2.35-r1.apk && \
-    rm glibc-2.35-r1.apk
+ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
+ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk .
+RUN apk add glibc-2.35-r1.apk
 
 COPY package.json .
 
@@ -21,7 +19,7 @@ COPY src ./src
 ENV NODE_ENV production
 RUN npm run build
 
-FROM node:17.9.0-alpine as test
+FROM node:22.13.0-alpine as test
 WORKDIR /app
 
 COPY package.json .
@@ -33,7 +31,7 @@ COPY test ./test
 
 CMD ["npm", "run", "test"]
 
-FROM node:17.9.0-alpine
+FROM node:22.13.0-alpine
 WORKDIR /app
 
 RUN apk add --no-cache tzdata curl libpng jpeg pango cairo giflib
@@ -51,10 +49,9 @@ RUN npm prune --production
 
 COPY polish-stocks.json ./
 
-RUN echo "30 19 * * 1-5 cd /app; node build/gpw-tweets.js > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root && \
-    echo "30 19 * * 6 cd /app; node build/gpw-tweets.js --weekly > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
+RUN echo "30 17 * * 1-5 cd /app; node build/gpw-tweets.js > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root && \
+    echo "30 17 * * 6 cd /app; node build/gpw-tweets.js --weekly > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
 
-VOLUME /app/mstall
 VOLUME /app/images
 
 COPY docker-entrypoint.sh /usr/local/bin/

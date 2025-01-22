@@ -11,7 +11,7 @@ const twitterCredentialsFile = process.env.GPW_TWEETS_TWITTER_CREDENTIALS_FILE |
 const minTurnover = process.env.GPW_TWEETS_MIN_TURNOVER || 100_000
 const minPrice = process.env.GPW_TWEETS_MIN_PRICE || 2.0
 
-type PolishStock = { symbol: string, ISIN: string, name: string, quotationTable: string }
+type PolishStock = { ticker: string, name: string }
 const polishStocks: PolishStock[] = JSON.parse(fs.readFileSync('polish-stocks.json', { encoding: 'utf8', flag: 'r' }))
 
 type TwitterCredentials = { appKey: string, appSecret: string, accessToken: string, accessSecret: string }
@@ -39,27 +39,34 @@ async function scan() {
     const weekStart = weekStartOf(today)
 
     const wseQuotes = new WSEQuotes()
-    await wseQuotes.update()
 
     let success = false
-    for (const stock of polishStocks) {
+    await Promise.all(polishStocks.map(async (stock) => {
+        const symbol = stock.ticker + '.WA'
         try {
-            let hist = await wseQuotes.getHistorical(stock.name)
-            if (hist.length < 2)
-                continue
+            const start = moment.utc().subtract(6, 'weekly' in args ? 'year': 'month').toDate()
+            let hist = await wseQuotes.getHistorical(symbol, start)
+            if (hist.length < 2) {
+                console.warn('Not enough data to scan', { symbol: symbol })
+                return
+            }
 
             const last = hist[hist.length - 1]
             const priceChange = (last.close / hist[hist.length - 2].close - 1) * 100
 
             if (!('no-date-check' in args) && ('weekly' in args ? weekStart !== weekStartOf(last.date) : today !== last.date)) {
-                console.warn('Day/Week of last candlestick differs with a current one. Skipping', { name: stock.name, last: last.date, current: today })
+                console.warn('Day/Week of last candlestick differs with a current one. Skipping', { symbol: symbol, last: last.date, current: today })
                 console.info('If you want to ignore this check, pass a --no-date-check argument in command line')
-                continue
+                return
             }
 
             hist = wseQuotes.resample(hist, 'weekly' in args ? 'W' : 'D')
-            if (hist.length < 2)
-                continue
+            if (hist.length < 2) {
+                console.warn('Not enough data to scan', { symbol: symbol })
+                return
+            }
+
+            console.info("Fetched", { symbol: symbol, count: hist.length })
 
             const current = hist[hist.length - 1]
             const previous = hist[hist.length - 2]
@@ -68,7 +75,7 @@ async function scan() {
             const currentTurnover = currentAvg * current.volume
 
             if ((+currentTurnover < +minTurnover) || (current.close < +minPrice))
-                continue
+                return
 
             let triggered = false
             if (current.isBullishEngulfing(previous)) { bullishEngulfing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
@@ -83,7 +90,7 @@ async function scan() {
             if (current.isBearishInsideBar(previous)) { bearishInsideBar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
 
             if (!triggered)
-                continue
+                return
 
             const description = stock.name
             const data = hist.slice(-110)
@@ -100,9 +107,9 @@ async function scan() {
 
             success = true
         } catch (e) {
-            console.warn('Unable to read WarsawStockExchange data', { name: stock.name, error: e.message })
+            console.warn('Unable to fetch WarsawStockExchange data', { symbol: symbol, error: e.message })
         }
-    }
+    }))
 
     return success
 }
@@ -145,7 +152,7 @@ async function tweet(triggered: Triggered[], description: string) {
     }
 
     const firstFour = triggered.slice(0, 4)
-    const mediaIds = await Promise.all(firstFour.map(t => twitterApiRW.v1.uploadMedia(`./images/${t.name}.png`)))
+    const mediaIds: any = await Promise.all(firstFour.map(t => twitterApiRW.v1.uploadMedia(`./images/${t.name}.png`)))
     twitterApiRW.v2.tweet(text, { media: { media_ids: mediaIds } })
 }
 
