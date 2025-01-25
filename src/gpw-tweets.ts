@@ -74,7 +74,10 @@ async function scan() {
             const currentAvg = (current.open + current.high + current.low + current.close) / 4
             const currentTurnover = currentAvg * current.volume
 
-            if ((+currentTurnover < +minTurnover) || (current.close < +minPrice))
+            const previousAvg = (previous.open + previous.high + previous.low + previous.close) / 4
+            const previousTurnover = previousAvg * previous.volume
+
+            if ((currentTurnover < +minTurnover) || (currentTurnover < previousTurnover * 2.0) || (current.close < +minPrice))
                 return
 
             let triggered = false
@@ -82,12 +85,8 @@ async function scan() {
             if (current.isBearishEngulfing(previous)) { bearishEngulfing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isBullishGap(previous)) { bullishGap.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isBearishGap(previous)) { bearishGap.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isMorningStar(previous)) { morningStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isShootingStar(previous)) { shootingStar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isPiercing(previous)) { piercing.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
             if (current.isDarkCloudCover(previous)) { darkCloudCover.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isBullishInsideBar(previous)) { bullishInsideBar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
-            if (current.isBearishInsideBar(previous)) { bearishInsideBar.push({ name: stock.name, turnover: currentTurnover }); triggered = true }
 
             if (!triggered)
                 return
