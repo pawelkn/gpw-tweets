@@ -77,7 +77,7 @@ async function scan() {
             const previousAvg = (previous.open + previous.high + previous.low + previous.close) / 4
             const previousTurnover = previousAvg * previous.volume
 
-            if ((currentTurnover < +minTurnover) || (currentTurnover < previousTurnover * 2.0) || (current.close < +minPrice))
+            if ((currentTurnover < +minTurnover) || (currentTurnover < previousTurnover * 1.5) || (current.close < +minPrice))
                 return
 
             let triggered = false

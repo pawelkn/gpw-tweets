@@ -258,7 +258,7 @@ export default function stockChart(description: string, data: Candlestick[], dat
         let bottom = logScale(min(e.close, e.open))
         let height = ((bottom - top) > 1.0 ? bottom - top : 0.0)
 
-        let highlight = i > 0 && data[i].volume > data[i-1].volume * 2.0
+        let highlight = i > 0 && data[i].volume > data[i-1].volume * 1.5
         let upcandle = e.close > e.open
 
         context.lineWidth = 1
